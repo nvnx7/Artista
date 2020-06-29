@@ -22,9 +22,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
     def tfl_version = "0.0.0-nightly"
     def glide_version = "4.9.0"
 
