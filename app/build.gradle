@@ -35,7 +35,8 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     def tfl_version = "0.0.0-nightly"
     def glide_version = "4.9.0"
-    def easy_permissions_version = "3.0.0"
+    def easypermissions_version = "3.0.0"
+    def viewmodel_scope_version = "2.3.0-alpha05"
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -55,5 +56,8 @@ dependencies {
     kapt "com.github.bumptech.glide:compiler:${glide_version}"
 
     // Easy Permissions
-    implementation "pub.devrel:easypermissions:${easy_permissions_version}"
+    implementation "pub.devrel:easypermissions:${easypermissions_version}"
+
+    // View Model Scope
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${viewmodel_scope_version}"
 }
