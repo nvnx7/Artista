@@ -1,6 +1,6 @@
 package `in`.thenvn.artista
 
-import java.net.URI
+import android.net.Uri
 
-data class MediaItem(val uri: URI) {
+data class MediaItem(val uri: Uri) {
 }

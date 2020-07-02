@@ -1,14 +1,15 @@
 package `in`.thenvn.artista
 
 import `in`.thenvn.artista.databinding.ListItemMediaBinding
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import java.net.URI
 
-class MediaItemsAdapter(val clickListener: MediaItemClickListener): ListAdapter<MediaItem, MediaItemsAdapter.ViewHolder>(MediaItemDiffCallback()) {
+class MediaItemsAdapter(private val clickListener: MediaItemClickListener) :
+    ListAdapter<MediaItem, MediaItemsAdapter.ViewHolder>(MediaItemDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
@@ -18,10 +19,12 @@ class MediaItemsAdapter(val clickListener: MediaItemClickListener): ListAdapter<
         holder.bind(getItem(position), clickListener)
     }
 
-    class ViewHolder private constructor(val binding: ListItemMediaBinding): RecyclerView.ViewHolder(binding.root) {
+    class ViewHolder private constructor(val binding: ListItemMediaBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(item: MediaItem, clickListener: MediaItemClickListener) {
             binding.mediaItem = item
             binding.clickListener = clickListener
+            binding.executePendingBindings()
         }
 
         companion object {
@@ -44,7 +47,7 @@ class MediaItemsAdapter(val clickListener: MediaItemClickListener): ListAdapter<
 
     }
 
-    class MediaItemClickListener(val clickListener: (uri: URI) -> Unit) {
+    class MediaItemClickListener(val clickListener: (uri: Uri) -> Unit) {
         fun onClick(item: MediaItem) = clickListener(item.uri)
     }
 
