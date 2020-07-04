@@ -1,7 +1,6 @@
 package `in`.thenvn.artista.media
 
 import `in`.thenvn.artista.databinding.ListItemMediaBinding
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -53,8 +52,8 @@ class MediaItemsAdapter(private val clickListener: MediaItemClickListener) :
 
     }
 
-    class MediaItemClickListener(val clickListener: (uri: Uri) -> Unit) {
-        fun onClick(item: MediaItem) = clickListener(item.uri)
+    class MediaItemClickListener(val clickListener: (mediaItem: MediaItem) -> Unit) {
+        fun onClick(item: MediaItem) = clickListener(item)
     }
 
 }

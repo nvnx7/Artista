@@ -35,9 +35,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         binding.mediaViewModel = mediaViewModel
         val adapter =
-            MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { uri ->
-                Log.d(TAG, "Item clicked with uri $uri")
-//            mediaViewModel.onMediaItemClicked(uri)
+            MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
+//                Log.d(TAG, "Item clicked with uri $uri")
+                mediaViewModel.onMediaItemClicked(mediaItem)
             })
 
         adapter.submitList(mediaViewModel.mediaItemListLiveData?.value)
