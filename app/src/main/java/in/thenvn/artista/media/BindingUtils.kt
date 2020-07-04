@@ -1,4 +1,4 @@
-package `in`.thenvn.artista
+package `in`.thenvn.artista.media
 
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter

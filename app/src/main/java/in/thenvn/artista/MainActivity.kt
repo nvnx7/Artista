@@ -1,6 +1,9 @@
 package `in`.thenvn.artista
 
 import `in`.thenvn.artista.databinding.ActivityMainBinding
+import `in`.thenvn.artista.media.MediaItemsAdapter
+import `in`.thenvn.artista.media.MediaViewModel
+import `in`.thenvn.artista.media.MediaViewModelFactory
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
@@ -25,15 +28,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         val binding: ActivityMainBinding =
             DataBindingUtil.setContentView(this, R.layout.activity_main)
-        val viewModelFactory = MediaViewModelFactory(application)
+        val viewModelFactory =
+            MediaViewModelFactory(application)
         val mediaViewModel =
             ViewModelProvider(this, viewModelFactory).get(MediaViewModel::class.java)
 
         binding.mediaViewModel = mediaViewModel
-        val adapter = MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { uri ->
-            Log.d(TAG, "Item clicked with uri $uri")
+        val adapter =
+            MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { uri ->
+                Log.d(TAG, "Item clicked with uri $uri")
 //            mediaViewModel.onMediaItemClicked(uri)
-        })
+            })
 
         adapter.submitList(mediaViewModel.mediaItemListLiveData?.value)
 

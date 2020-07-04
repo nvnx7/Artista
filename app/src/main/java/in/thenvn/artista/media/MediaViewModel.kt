@@ -1,4 +1,4 @@
-package `in`.thenvn.artista
+package `in`.thenvn.artista.media
 
 import android.app.Application
 import android.content.ContentUris
