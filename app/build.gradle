@@ -34,6 +34,7 @@ android {
 
 dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     def tfl_version = "0.0.0-nightly"
     def glide_version = "4.9.0"
     def easypermissions_version = "3.0.0"

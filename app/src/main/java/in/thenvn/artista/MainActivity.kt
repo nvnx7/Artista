@@ -1,18 +1,10 @@
 package `in`.thenvn.artista
 
-import `in`.thenvn.artista.databinding.ActivityMainBinding
-import `in`.thenvn.artista.media.MediaItemsAdapter
-import `in`.thenvn.artista.media.MediaViewModel
-import `in`.thenvn.artista.media.MediaViewModelFactory
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
@@ -25,38 +17,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val binding: ActivityMainBinding =
-            DataBindingUtil.setContentView(this, R.layout.activity_main)
-        val viewModelFactory =
-            MediaViewModelFactory(application)
-        val mediaViewModel =
-            ViewModelProvider(this, viewModelFactory).get(MediaViewModel::class.java)
-
-        binding.mediaViewModel = mediaViewModel
-        val adapter =
-            MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
-//                Log.d(TAG, "Item clicked with uri $uri")
-                mediaViewModel.onMediaItemClicked(mediaItem)
-            })
-
-        adapter.submitList(mediaViewModel.mediaItemListLiveData?.value)
-
-
-        val layoutManager = GridLayoutManager(this, 3)
-        binding.mediaGrid.layoutManager = layoutManager
-        binding.mediaGrid.setHasFixedSize(true)
-        val spacing = resources.getDimensionPixelSize(R.dimen.grid_space)
-        binding.mediaGrid.addItemDecoration(SpaceItemDecoration(spacing, 3))
-
-        binding.mediaGrid.adapter = adapter
-        binding.lifecycleOwner = this
-
-        mediaViewModel.mediaItemListLiveData?.observe(this, Observer { mediaUriList ->
-            Log.d(TAG, "Fetched media list!")
-            binding.mediaGrid.adapter = adapter
-            adapter.submitList(mediaUriList)
-        })
+        setContentView(R.layout.activity_main)
 
         if (EasyPermissions.hasPermissions(
                 this,
