@@ -10,10 +10,12 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
 
-private const val RC_PERMISSIONS: Int = 2
-
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    private val TAG: String = MainActivity::class.java.name
+
+    companion object {
+        private val TAG: String = MainActivity::class.java.name
+        private const val RC_PERMISSIONS: Int = 2
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
