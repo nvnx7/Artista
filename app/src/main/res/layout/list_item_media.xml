@@ -29,7 +29,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcUri="@{mediaItem}"
+            app:srcMedia="@{mediaItem}"
             tools:srcCompat="@tools:sample/avatars" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
