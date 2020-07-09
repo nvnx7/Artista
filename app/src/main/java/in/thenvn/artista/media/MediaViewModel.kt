@@ -19,7 +19,7 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
     override val coroutineContext: CoroutineContext
         get() = viewModelJob + Dispatchers.Main
 
-    private var _mediaUriListLiveData = MutableLiveData<MutableList<Uri>>()
+    private val _mediaUriListLiveData = MutableLiveData<MutableList<Uri>>()
     val mediaUriListLiveData: LiveData<MutableList<Uri>>
         get() = _mediaUriListLiveData
 
