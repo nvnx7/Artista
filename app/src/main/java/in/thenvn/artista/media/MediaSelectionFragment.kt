@@ -1,7 +1,7 @@
 package `in`.thenvn.artista.media
 
+import `in`.thenvn.artista.GridSpaceItemDecoration
 import `in`.thenvn.artista.R
-import `in`.thenvn.artista.SpaceItemDecoration
 import `in`.thenvn.artista.databinding.FragmentMediaSelectionBinding
 import android.os.Bundle
 import android.util.Log
@@ -55,7 +55,7 @@ class MediaSelectionFragment : Fragment() {
         binding.mediaGrid.layoutManager = layoutManager
         binding.mediaGrid.setHasFixedSize(true)
         val spacing = resources.getDimensionPixelSize(R.dimen.grid_space)
-        binding.mediaGrid.addItemDecoration(SpaceItemDecoration(spacing, 3))
+        binding.mediaGrid.addItemDecoration(GridSpaceItemDecoration(spacing, 3))
 
         binding.mediaGrid.adapter = adapter
         binding.lifecycleOwner = this
