@@ -3,10 +3,10 @@ package `in`.thenvn.artista
 import `in`.thenvn.artista.utils.ImageUtils
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
-import java.io.File
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
@@ -42,17 +42,22 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
 
     fun execute(
         context: Context,
-        contentImagePath: String,
-        styleImagePath: String
+        contentImageUri: Uri,
+        styleImageUri: Uri
     ): Bitmap {
         try {
-            val contentBitmap = ImageUtils.decodeBitmap(File(contentImagePath))
+//            val absPath = Uri.parse(contentImagePath).path
+//            val file = File(Uri.parse(contentImagePath).path!!)
+//            val file = File(absPath!!)
+            val stream = context.contentResolver.openInputStream(contentImageUri)
+
+            val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
             val contentArray = ImageUtils.bitmapToByteBuffer(
                 contentBitmap,
                 CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE
             )
             val styleBitmap =
-                ImageUtils.loadBitmapFromResource(context, "thumbnails/${styleImagePath}")
+                ImageUtils.loadBitmapFromResource(context, "thumbnails/${styleImageUri}")
             val styleArray = ImageUtils.bitmapToByteBuffer(
                 styleBitmap,
                 STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
