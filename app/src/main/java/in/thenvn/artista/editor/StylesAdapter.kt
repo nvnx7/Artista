@@ -38,7 +38,7 @@ class StylesAdapter(private val clickListener: StyleClickListener) :
 
     class StyleDiffCallback : DiffUtil.ItemCallback<Style>() {
         override fun areItemsTheSame(oldItem: Style, newItem: Style): Boolean {
-            return oldItem.path == newItem.path
+            return oldItem.uri == newItem.uri
         }
 
         override fun areContentsTheSame(oldItem: Style, newItem: Style): Boolean {
