@@ -2,13 +2,15 @@ package `in`.thenvn.artista.utils
 
 import android.content.Context
 import android.graphics.*
-import android.media.ExifInterface
+import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
+import com.bumptech.glide.Glide
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 
-annotation class ImageUtils {
+abstract class ImageUtils {
 
     companion object {
         /**
@@ -66,6 +68,27 @@ annotation class ImageUtils {
             )
         }
 
+        fun decodeBitmap(context: Context, imageUri: Uri): Bitmap {
+            val stream = context.contentResolver.openInputStream(imageUri)
+            val exif = ExifInterface(stream!!)
+            val transformation =
+                decodeExifOrientation(
+                    exif.getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_ROTATE_90
+                    )
+                )
+
+            val bitmap = Glide.with(context).asBitmap().load(imageUri).submit().get()
+//            val bitmap = BitmapFactory.decodeFile(Uri.parse(contentImagePath).path)
+
+            return Bitmap.createBitmap(
+                Glide.with(context).asBitmap().load(imageUri).submit().get(), 0, 0,
+                bitmap.width, bitmap.height,
+                transformation,
+                true
+            )
+        }
+
         fun scaleBitmapAndKeepRatio(
             targetBitmap: Bitmap,
             reqWidthInPixels: Int,
@@ -77,16 +100,18 @@ annotation class ImageUtils {
 
             val matrix = Matrix()
             matrix.setRectToRect(
-                RectF(0F, 0F, targetBitmap.width.toFloat(), targetBitmap.width.toFloat()),
+                RectF(0F, 0F, targetBitmap.width.toFloat(), targetBitmap.height.toFloat()),
                 RectF(0F, 0F, reqWidthInPixels.toFloat(), reqHeightInPixels.toFloat()),
                 Matrix.ScaleToFit.FILL
             )
 
-            return Bitmap.createBitmap(
+            val bitmap = Bitmap.createBitmap(
                 targetBitmap, 0, 0,
-                targetBitmap.width, targetBitmap.width,
+                targetBitmap.width, targetBitmap.height,
                 matrix, true
             )
+
+            return bitmap
         }
 
         fun bitmapToByteBuffer(

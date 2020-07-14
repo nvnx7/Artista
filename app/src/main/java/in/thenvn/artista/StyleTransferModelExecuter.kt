@@ -49,7 +49,7 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
 //            val absPath = Uri.parse(contentImagePath).path
 //            val file = File(Uri.parse(contentImagePath).path!!)
 //            val file = File(absPath!!)
-            val stream = context.contentResolver.openInputStream(contentImageUri)
+//            val stream = context.contentResolver.openInputStream(contentImageUri)
 
             val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
             val contentArray = ImageUtils.bitmapToByteBuffer(
@@ -57,7 +57,10 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
                 CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE
             )
             val styleBitmap =
-                ImageUtils.loadBitmapFromResource(context, "thumbnails/${styleImageUri}")
+                ImageUtils.loadBitmapFromResource(
+                    context,
+                    "styles/${styleImageUri.lastPathSegment}"
+                )
             val styleArray = ImageUtils.bitmapToByteBuffer(
                 styleBitmap,
                 STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
@@ -74,6 +77,7 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
             val outputForStyleTransfer = HashMap<Int, Any>()
             val outputImage =
                 Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
+            outputForStyleTransfer[0] = outputImage
 
             interpreterTransform.runForMultipleInputsOutputs(
                 inputForStyleTransfer,
