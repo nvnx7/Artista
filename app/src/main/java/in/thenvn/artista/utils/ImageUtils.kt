@@ -3,11 +3,13 @@ package `in`.thenvn.artista.utils
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
+import androidx.core.graphics.ColorUtils
 import androidx.exifinterface.media.ExifInterface
 import com.bumptech.glide.Glide
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.round
 
 
 abstract class ImageUtils {
@@ -183,6 +185,76 @@ abstract class ImageUtils {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
             if (color != 0) bitmap.eraseColor(color)
             return bitmap
+        }
+
+        /**
+         * Helper function to pad a bitmap at right and bottom edges so that to create a final
+         * bitmap of width [finalWidth] and height [finalHeight]
+         *
+         * @param bitmapIn Bitmap to be processed upon
+         * @param finalWidth Required final width of padded bitmap
+         * @param finalHeight Required final height of padded bitmap
+         *
+         * @return A new padded bitmap
+         */
+        fun padBitmap(bitmapIn: Bitmap, finalWidth: Int, finalHeight: Int): Bitmap {
+            if (bitmapIn.width > finalWidth || bitmapIn.height > finalHeight) {
+                throw IllegalArgumentException("Provided bitmap dimensions should be less than final dimensions")
+            }
+            val paddedBitmap = Bitmap.createBitmap(finalWidth, finalHeight, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(paddedBitmap)
+            canvas.drawARGB(255, 255, 255, 255) // white background
+            canvas.drawBitmap(bitmapIn, 0F, 0F, null) // draw bitmap at top left
+            return paddedBitmap
+        }
+
+        /**
+         * Helper method to fade top edge of bitmap [bitmapIn] linearly like gradient (alpha 0 to 1) up to [nRows]
+         * number of rows from top edge of bitmap.
+         *
+         * @param bitmapIn Bitmap to fade top edge of
+         * @param nRows No of rows up to which linear fading to be applied
+         */
+        fun fadeTopEdge(bitmapIn: Bitmap, nRows: Int) {
+            val pixels = IntArray(bitmapIn.width * bitmapIn.height)
+            bitmapIn.getPixels(pixels, 0, bitmapIn.width, 0, 0, bitmapIn.width, bitmapIn.height)
+            val dAlpha: Float = round((1F / nRows) * 100) / 100
+
+            var alphaM = 0F
+            for (i in 0..(bitmapIn.width * nRows)) {
+                val alpha: Int = (255 * alphaM).toInt()
+                pixels[i] = ColorUtils.setAlphaComponent(pixels[i], alpha)
+
+                if (i % bitmapIn.width == 0 && i >= bitmapIn.width) {
+                    alphaM += dAlpha
+                }
+            }
+
+            bitmapIn.setPixels(pixels, 0, bitmapIn.width, 0, 0, bitmapIn.width, bitmapIn.height)
+        }
+
+        /**
+         * Helper method to fade left edge of bitmap [bitmapIn] linearly like gradient (alpha 0 to 1) up to [nCols]
+         * number of columns from left edge of bitmap.
+         *
+         * @param bitmapIn Bitmap to fade top edge of
+         * @param nCols No of columns up to which linear fading to be applied
+         */
+        fun fadeLeftEdge(bitmapIn: Bitmap, nCols: Int) {
+            val pixels = IntArray(bitmapIn.width * bitmapIn.height)
+            bitmapIn.getPixels(pixels, 0, bitmapIn.width, 0, 0, bitmapIn.width, bitmapIn.height)
+            val dAlpha: Float = round((1F / nCols) * 100) / 100
+
+            for (i in pixels.indices step bitmapIn.width) {
+                var alphaM = 0F
+                for (j in 0..nCols) {
+                    val alpha = (255 * alphaM).toInt()
+                    pixels[i + j] = ColorUtils.setAlphaComponent(pixels[i + j], alpha)
+                    alphaM += dAlpha
+                }
+            }
+
+            bitmapIn.setPixels(pixels, 0, bitmapIn.width, 0, 0, bitmapIn.width, bitmapIn.height)
         }
     }
 }
