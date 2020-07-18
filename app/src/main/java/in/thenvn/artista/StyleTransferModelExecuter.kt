@@ -11,13 +11,14 @@ import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean = true) {
+class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
 
     companion object {
         private const val TAG = "StyleTransferModelExecutor"
         private const val STYLE_IMAGE_SIZE = 256
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
+        private const val OVERLAP_SIZE = 50
         private const val STYLE_PREDICT_INT8_MODEL = "style_predict_quantized_256.tflite"
         private const val STYLE_TRANSFER_INT8_MODEL = "style_transfer_quantized_384.tflite"
         private const val STYLE_PREDICT_FLOAT16_MODEL = "style_predict_f16_256.tflite"
@@ -46,16 +47,7 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         styleImageUri: Uri
     ): Bitmap {
         try {
-//            val absPath = Uri.parse(contentImagePath).path
-//            val file = File(Uri.parse(contentImagePath).path!!)
-//            val file = File(absPath!!)
-//            val stream = context.contentResolver.openInputStream(contentImageUri)
-
-            val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
-            val contentArray = ImageUtils.bitmapToByteBuffer(
-                contentBitmap,
-                CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE
-            )
+            // Extract the style bottleneck from style bitmap
             val styleBitmap =
                 ImageUtils.loadBitmapFromResource(
                     context,
@@ -70,24 +62,46 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
             val outputsForPredict = HashMap<Int, Any>()
             val styleBottleneck = Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
             outputsForPredict[0] = styleBottleneck
-
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
 
-            val inputForStyleTransfer = arrayOf(contentArray, styleBottleneck)
-            val outputForStyleTransfer = HashMap<Int, Any>()
-            val outputImage =
-                Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
-            outputForStyleTransfer[0] = outputImage
+            // Perform style transfer on content image
+            val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
 
-            interpreterTransform.runForMultipleInputsOutputs(
-                inputForStyleTransfer,
-                outputForStyleTransfer
+            val bitmapFragments = BitmapFragments(
+                contentBitmap,
+                CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE,
+                OVERLAP_SIZE
             )
+            contentBitmap.recycle()
 
-            val styledBitmap =
-                ImageUtils.convertArrayToBitmap(outputImage, CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE)
+            for (i in 0 until bitmapFragments.numberOfFragments) {
+                val contentArray = ImageUtils.bitmapToByteBuffer(
+                    bitmapFragments[i],
+                    CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE
+                )
+                val inputForStyleTransfer = arrayOf(contentArray, styleBottleneck)
 
-            return styledBitmap
+                val outputForStyleTransfer = HashMap<Int, Any>()
+                val outputImage =
+                    Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
+                outputForStyleTransfer[0] = outputImage
+
+                interpreterTransform.runForMultipleInputsOutputs(
+                    inputForStyleTransfer,
+                    outputForStyleTransfer
+                )
+
+                val styledBitmap =
+                    ImageUtils.convertArrayToBitmap(
+                        outputImage,
+                        CONTENT_IMAGE_SIZE,
+                        CONTENT_IMAGE_SIZE
+                    )
+
+                bitmapFragments[i] = styledBitmap
+            }
+
+            return bitmapFragments.patchFragments()
         } catch (e: Exception) {
             Log.d(TAG, "Error in inference pipeline: ${e.message}")
             return ImageUtils.createEmptyBitmap(CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE)
@@ -99,16 +113,16 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         modelName: String,
         useGPU: Boolean = true
     ): Interpreter {
-        val tfliteOptions = Interpreter.Options()
-        tfliteOptions.setNumThreads(numberOfThreads)
+        val options = Interpreter.Options()
+        options.setNumThreads(numberOfThreads)
 
         gpuDelegate = null
         if (useGPU) {
             gpuDelegate = GpuDelegate()
-            tfliteOptions.addDelegate(gpuDelegate)
+            options.addDelegate(gpuDelegate)
         }
 
-        return Interpreter(loadModel(context, modelName), tfliteOptions)
+        return Interpreter(loadModel(context, modelName), options)
     }
 
     private fun loadModel(context: Context, modelName: String): MappedByteBuffer {
