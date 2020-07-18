@@ -44,7 +44,8 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
     fun execute(
         context: Context,
         contentImageUri: Uri,
-        styleImageUri: Uri
+        styleImageUri: Uri,
+        postProgress: (progress: Int) -> Unit
     ): Bitmap {
         try {
             // Extract the style bottleneck from style bitmap
@@ -99,6 +100,10 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
                     )
 
                 bitmapFragments[i] = styledBitmap
+
+                val progress = (i + 1) * 100 / bitmapFragments.numberOfFragments
+                postProgress(progress)
+                Log.i(TAG, "Progress styling bitmap: ${i + 1}/${bitmapFragments.numberOfFragments}")
             }
 
             return bitmapFragments.patchFragments()

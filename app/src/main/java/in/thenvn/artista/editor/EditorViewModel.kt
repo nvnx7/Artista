@@ -34,6 +34,10 @@ class EditorViewModel(
     val stylesList: LiveData<ArrayList<Style>>
         get() = _stylesListLiveData
 
+    private val _progressLiveData = MutableLiveData<Int>()
+    val progressLiveData: LiveData<Int>
+        get() = _progressLiveData
+
     init {
         _originalMediaUriLiveData.value = _originalMediaUri
 
@@ -53,7 +57,10 @@ class EditorViewModel(
         inferenceThread: ExecutorCoroutineDispatcher
     ) {
         viewModelScope.launch(inferenceThread) {
-            val result = styleTransferModelExecutor.execute(context, contentImageUri, styleImageUri)
+            val result =
+                styleTransferModelExecutor.execute(context, contentImageUri, styleImageUri) {
+                    _progressLiveData.postValue(it)
+                }
             _styledBitmapLiveData.postValue(result)
         }
     }
