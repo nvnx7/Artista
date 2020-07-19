@@ -1,5 +1,6 @@
 package `in`.thenvn.artista.editor
 
+import `in`.thenvn.artista.databinding.ListItemButtonBinding
 import `in`.thenvn.artista.databinding.ListItemStyleBinding
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -8,18 +9,30 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
 class StylesAdapter(private val clickListener: StyleClickListener) :
-    ListAdapter<Style, StylesAdapter.ViewHolder>(StyleDiffCallback()) {
+    ListAdapter<Style, RecyclerView.ViewHolder>(StyleDiffCallback()) {
 
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder.from(parent)
+    companion object {
+        const val TYPE_BUTTON = 0
+        const val TYPE_STYLE = 1
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position), clickListener)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        if (viewType == TYPE_BUTTON) return ButtonViewHolder.from(parent)
+        return StyleViewHolder.from(parent)
     }
 
-    class ViewHolder private constructor(val binding: ListItemStyleBinding) :
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is ButtonViewHolder) holder.bind(clickListener)
+        else (holder as StyleViewHolder).bind(getItem(position), clickListener)
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        if (position == 0) return TYPE_BUTTON
+        return TYPE_STYLE
+    }
+
+    class StyleViewHolder private constructor(val binding: ListItemStyleBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(style: Style, clickListener: StyleClickListener) {
             binding.style = style
@@ -28,10 +41,26 @@ class StylesAdapter(private val clickListener: StyleClickListener) :
         }
 
         companion object {
-            fun from(parent: ViewGroup): ViewHolder {
+            fun from(parent: ViewGroup): StyleViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = ListItemStyleBinding.inflate(layoutInflater, parent, false)
-                return ViewHolder(binding)
+                return StyleViewHolder(binding)
+            }
+        }
+    }
+
+    class ButtonViewHolder private constructor(val binding: ListItemButtonBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(clickListener: StyleClickListener) {
+            binding.clickListener = clickListener
+            binding.executePendingBindings()
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): ButtonViewHolder {
+                val layoutInflater = LayoutInflater.from(parent.context)
+                val binding = ListItemButtonBinding.inflate(layoutInflater, parent, false)
+                return ButtonViewHolder(binding)
             }
         }
     }
@@ -47,7 +76,11 @@ class StylesAdapter(private val clickListener: StyleClickListener) :
 
     }
 
-    class StyleClickListener(val clickListener: (style: Style) -> Unit) {
-        fun onClick(style: Style) = clickListener(style)
+    class StyleClickListener(
+        val styleClickListener: (style: Style) -> Unit,
+        val buttonClickListener: () -> Unit
+    ) {
+        fun onStyleClick(style: Style) = styleClickListener(style)
+        fun onButtonClick() = buttonClickListener()
     }
 }
