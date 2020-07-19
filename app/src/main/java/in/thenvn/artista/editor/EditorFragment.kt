@@ -27,6 +27,8 @@ class EditorFragment : Fragment() {
     private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val mainScope = MainScope()
 
+    private lateinit var editorViewModel: EditorViewModel
+
     companion object {
         private const val TAG = "EditorFragment"
     }
@@ -49,7 +51,7 @@ class EditorFragment : Fragment() {
             val application = requireNotNull(activity).application
 
             val viewModelFactory = EditorViewModelFactory(Uri.parse(uriString), application)
-            val editorViewModel =
+            editorViewModel =
                 ViewModelProvider(this, viewModelFactory).get(EditorViewModel::class.java)
             binding.editorViewModel = editorViewModel
 
@@ -58,18 +60,13 @@ class EditorFragment : Fragment() {
                 Log.i(TAG, "Executor created")
             }
 
-            val adapter = StylesAdapter(StylesAdapter.StyleClickListener { style ->
-                Log.i(TAG, "Style clicked: ${style.uri}")
-                editorViewModel.applyStyle(
-                    requireContext(),
-                    editorViewModel.originalMediaUriLiveData.value!!,
-                    style.uri,
-                    styleTransferModelExecutor,
-                    inferenceThread
+            val adapter = StylesAdapter(
+                StylesAdapter.StyleClickListener(
+                    { style -> applyStyle(style) },
+                    { chooseCustomStyle() }
                 )
-            })
+            )
 
-            Log.i(TAG, "List to be submitted ${editorViewModel.stylesList.value?.get(0)}")
             adapter.submitList(editorViewModel.stylesList.value)
 
             val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
@@ -91,18 +88,25 @@ class EditorFragment : Fragment() {
                     .into(binding.preview)
             })
 
-//            binding.preview.setOnClickListener {
-//                Log.i(TAG, "onCreateView: setting style img")
-//                Glide.with(this)
-//                    .load("file:///android_asset/styles/style0.jpg")
-//                    .override(300)
-//                    .centerInside()
-//                    .into(binding.preview)
-//
-//                Log.i(TAG, "Submitted sample ${adapter.currentList.get(0)}")
-//            }
+//            editorViewModel.progressLiveData.observe(viewLifecycleOwner, Observer { progress ->
+//                Log.i(TAG, "Progress %: $progress")
+//            })
         }
 
         return binding.root
+    }
+
+    private fun applyStyle(style: Style) {
+        editorViewModel.applyStyle(
+            requireContext(),
+            editorViewModel.originalMediaUriLiveData.value!!,
+            style.uri,
+            styleTransferModelExecutor,
+            inferenceThread
+        )
+    }
+
+    private fun chooseCustomStyle() {
+        Log.i(TAG, "chooseCustomStyle: execute")
     }
 }
