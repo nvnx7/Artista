@@ -4,12 +4,15 @@ import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
 import `in`.thenvn.artista.StyleTransferModelExecutor
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -31,6 +34,7 @@ class EditorFragment : Fragment() {
 
     companion object {
         private const val TAG = "EditorFragment"
+        private const val RC_PICK_IMAGE = 1000
     }
 
     override fun onCreateView(
@@ -63,7 +67,7 @@ class EditorFragment : Fragment() {
             val adapter = StylesAdapter(
                 StylesAdapter.StyleClickListener(
                     { style -> applyStyle(style) },
-                    { chooseCustomStyle() }
+                    { openPhotosActivity() }
                 )
             )
 
@@ -87,26 +91,35 @@ class EditorFragment : Fragment() {
                     .load(bitmap)
                     .into(binding.preview)
             })
-
-//            editorViewModel.progressLiveData.observe(viewLifecycleOwner, Observer { progress ->
-//                Log.i(TAG, "Progress %: $progress")
-//            })
         }
 
         return binding.root
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK && requestCode == RC_PICK_IMAGE) {
+            val uri = data!!.data!!
+            applyStyle(Style(uri, Style.CUSTOM))
+        } else {
+            Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun applyStyle(style: Style) {
         editorViewModel.applyStyle(
             requireContext(),
             editorViewModel.originalMediaUriLiveData.value!!,
-            style.uri,
+            style,
             styleTransferModelExecutor,
             inferenceThread
         )
     }
 
-    private fun chooseCustomStyle() {
+    private fun openPhotosActivity() {
         Log.i(TAG, "chooseCustomStyle: execute")
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, RC_PICK_IMAGE)
     }
 }
