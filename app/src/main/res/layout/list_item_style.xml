@@ -17,7 +17,7 @@
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="@{() -> clickListener.onClick(style)}">
+        android:onClick="@{() -> clickListener.onStyleClick(style)}">
 
 
         <ImageView
