@@ -1,10 +1,12 @@
 package `in`.thenvn.artista
 
+import `in`.thenvn.artista.editor.Style
 import `in`.thenvn.artista.utils.ImageUtils
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import com.bumptech.glide.Glide
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.FileInputStream
@@ -44,16 +46,12 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
     fun execute(
         context: Context,
         contentImageUri: Uri,
-        styleImageUri: Uri,
+        style: Style,
         postProgress: (progress: Int) -> Unit
     ): Bitmap {
         try {
             // Extract the style bottleneck from style bitmap
-            val styleBitmap =
-                ImageUtils.loadBitmapFromResource(
-                    context,
-                    "styles/${styleImageUri.lastPathSegment}"
-                )
+            val styleBitmap = preProcessStyle(context, style)
             val styleArray = ImageUtils.bitmapToByteBuffer(
                 styleBitmap,
                 STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
@@ -92,14 +90,14 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
                     outputForStyleTransfer
                 )
 
-                val styledBitmap =
+                val styledFragment =
                     ImageUtils.convertArrayToBitmap(
                         outputImage,
                         CONTENT_IMAGE_SIZE,
                         CONTENT_IMAGE_SIZE
                     )
 
-                bitmapFragments[i] = styledBitmap
+                bitmapFragments[i] = styledFragment
 
                 val progress = (i + 1) * 100 / bitmapFragments.numberOfFragments
                 postProgress(progress)
@@ -110,6 +108,24 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         } catch (e: Exception) {
             Log.d(TAG, "Error in inference pipeline: ${e.message}")
             return ImageUtils.createEmptyBitmap(CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE)
+        }
+    }
+
+    private fun preProcessStyle(context: Context, style: Style): Bitmap {
+        return when (style.type) {
+            Style.FIXED -> {
+                ImageUtils.loadBitmapFromAssets(context, "styles/${style.uri.lastPathSegment}")
+            }
+            Style.CUSTOM -> {
+                Glide.with(context)
+                    .asBitmap()
+                    .load(style.uri)
+                    .override(STYLE_IMAGE_SIZE)
+                    .centerCrop()
+                    .submit()
+                    .get()
+            }
+            else -> throw IllegalArgumentException("Style type unknown!")
         }
     }
 
