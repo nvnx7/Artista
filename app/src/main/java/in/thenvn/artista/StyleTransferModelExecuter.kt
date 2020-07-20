@@ -21,6 +21,7 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
         private const val OVERLAP_SIZE = 50
+        private const val CONTENT_BLEND_RATIO = 0.5F
         private const val STYLE_PREDICT_INT8_MODEL = "style_predict_quantized_256.tflite"
         private const val STYLE_TRANSFER_INT8_MODEL = "style_transfer_quantized_384.tflite"
         private const val STYLE_PREDICT_FLOAT16_MODEL = "style_predict_f16_256.tflite"
@@ -74,11 +75,30 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             contentBitmap.recycle()
 
             for (i in 0 until bitmapFragments.numberOfFragments) {
+                val contentStyleBitmap = ImageUtils.scaleBitmapAndKeepRatio(
+                    bitmapFragments[i],
+                    STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
+                )
+                val contentStyleArray = ImageUtils.bitmapToByteBuffer(
+                    contentStyleBitmap,
+                    STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
+                )
+                val inputsStylePredict = arrayOf(contentStyleArray)
+                val outputsStylePredict = HashMap<Int, Any>()
+                val contentStyleBottleneck =
+                    Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
+                outputsStylePredict[0] = contentStyleBottleneck
+                interpreterPredict.runForMultipleInputsOutputs(
+                    inputsStylePredict,
+                    outputsStylePredict
+                )
+                val styleBottleneckBlended = blendStyles(styleBottleneck, contentStyleBottleneck)
+
                 val contentArray = ImageUtils.bitmapToByteBuffer(
                     bitmapFragments[i],
                     CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE
                 )
-                val inputForStyleTransfer = arrayOf(contentArray, styleBottleneck)
+                val inputForStyleTransfer = arrayOf(contentArray, styleBottleneckBlended)
 
                 val outputForStyleTransfer = HashMap<Int, Any>()
                 val outputImage =
@@ -111,19 +131,34 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         }
     }
 
+    private fun blendStyles(
+        styleBottleneck: Array<Array<Array<FloatArray>>>,
+        contentStyleBottleneck: Array<Array<Array<FloatArray>>>
+    ): Array<Array<Array<FloatArray>>> {
+        val blendedStyle = Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
+
+        for (i in 0 until BOTTLENECK_SIZE) {
+            blendedStyle[0][0][0][i] = (CONTENT_BLEND_RATIO * contentStyleBottleneck[0][0][0][i]) +
+                    ((1 - CONTENT_BLEND_RATIO) * styleBottleneck[0][0][0][i])
+        }
+
+        return blendedStyle
+    }
+
     private fun preProcessStyle(context: Context, style: Style): Bitmap {
         return when (style.type) {
             Style.FIXED -> {
                 ImageUtils.loadBitmapFromAssets(context, "styles/${style.uri.lastPathSegment}")
             }
             Style.CUSTOM -> {
-                Glide.with(context)
+                val b = Glide.with(context)
                     .asBitmap()
                     .load(style.uri)
                     .override(STYLE_IMAGE_SIZE)
                     .centerCrop()
                     .submit()
                     .get()
+                b
             }
             else -> throw IllegalArgumentException("Style type unknown!")
         }
