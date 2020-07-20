@@ -49,9 +49,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:orientation="horizontal"
                 tools:itemCount="6"
-                tools:listitem="@layout/list_item_media" />
+                tools:listitem="@layout/list_item_media"
+                tools:orientation="horizontal" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

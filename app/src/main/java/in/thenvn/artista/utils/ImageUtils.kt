@@ -73,6 +73,7 @@ abstract class ImageUtils {
         fun decodeBitmap(context: Context, imageUri: Uri): Bitmap {
             val stream = context.contentResolver.openInputStream(imageUri)
             val exif = ExifInterface(stream!!)
+            //TODO Wrong orientation is received
             val transformation =
                 decodeExifOrientation(
                     exif.getAttributeInt(
@@ -81,14 +82,14 @@ abstract class ImageUtils {
                 )
 
             val bitmap = Glide.with(context).asBitmap().load(imageUri).submit().get()
-//            val bitmap = BitmapFactory.decodeFile(Uri.parse(contentImagePath).path)
 
-            return Bitmap.createBitmap(
-                Glide.with(context).asBitmap().load(imageUri).submit().get(), 0, 0,
-                bitmap.width, bitmap.height,
-                transformation,
-                true
-            )
+//            return Bitmap.createBitmap(
+//                Glide.with(context).asBitmap().load(imageUri).submit().get(), 0, 0,
+//                bitmap.width, bitmap.height,
+//                transformation,
+//                true
+//            )
+            return bitmap
         }
 
         fun scaleBitmapAndKeepRatio(
@@ -154,7 +155,44 @@ abstract class ImageUtils {
             return inputImage
         }
 
-        fun loadBitmapFromResource(context: Context, path: String): Bitmap {
+//        fun blendBitmaps(
+//            bitmap1: Bitmap, bitmap2: Bitmap,
+//            mean: Float = 0.0F, std: Float = 255.0F,
+//            multiplier: Float = 0.5F
+//        ): ByteBuffer {
+//            val width = bitmap1.width
+//            val height = bitmap1.height
+//            if (width != bitmap2.width || height != bitmap2.height) {
+//                throw IllegalArgumentException("Bitmaps dimensions mismatch!")
+//            }
+//
+//            val inputImage = ByteBuffer.allocateDirect(1 * width * height * 3 * 4)
+//            inputImage.order(ByteOrder.nativeOrder())
+//            inputImage.rewind()
+//
+//            val intValues1 = IntArray(width * height)
+//            val intValues2 = IntArray(width * height)
+//            bitmap1.getPixels(intValues1, 0, width, 0, 0, width, height)
+//            bitmap2.getPixels(intValues2, 0, width, 0, 0, width, height)
+//
+//            var pixel = 0
+//            for (y in 0 until height) {
+//                for (x in 0 until width) {
+//                    val value = intValues1[pixel]
+//
+//                    inputImage.putFloat(((value shr 16 and 0xFF) - mean) / std)
+//                    inputImage.putFloat(((value shr 8 and 0xFF) - mean) / std)
+//                    inputImage.putFloat(((value and 0xFF) - mean) / std)
+//
+//                    pixel++
+//                }
+//            }
+//
+//            inputImage.rewind()
+//            return inputImage
+//        }
+
+        fun loadBitmapFromAssets(context: Context, path: String): Bitmap {
             val inputStream = context.assets.open(path)
             return BitmapFactory.decodeStream(inputStream)
         }

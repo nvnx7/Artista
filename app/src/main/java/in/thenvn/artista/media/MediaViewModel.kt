@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -51,7 +50,6 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
                 val imageUri: Uri =
                     ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
                 mediaList.add(imageUri)
-                Log.d("MediaViewModel", "Got uri: ${imageUri}")
             }
         }
         return mediaList
