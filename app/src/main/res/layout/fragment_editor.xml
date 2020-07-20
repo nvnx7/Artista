@@ -21,37 +21,27 @@
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
             android:minHeight="300dp"
-            app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+            app:layout_constraintBottom_toTopOf="@+id/styles_list"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcUri="@{editorViewModel.originalMediaUriLiveData}"
             tools:src="@tools:sample/avatars" />
 
-        <LinearLayout
-            android:id="@+id/linearLayout"
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/styles_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:itemCount="6"
+            tools:listitem="@layout/list_item_media"
             android:padding="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            tools:orientation="horizontal" />
 
-            <!--            <View-->
-            <!--                android:layout_width="140dp"-->
-            <!--                android:layout_height="140dp"-->
-            <!--                android:background="@color/colorPrimary" />-->
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/styles_list"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:itemCount="6"
-                tools:listitem="@layout/list_item_media"
-                tools:orientation="horizontal" />
-        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
