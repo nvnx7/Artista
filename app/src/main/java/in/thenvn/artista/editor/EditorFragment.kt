@@ -22,6 +22,7 @@ import com.bumptech.glide.Glide
 class EditorFragment : Fragment() {
 
     private lateinit var editorViewModel: EditorViewModel
+    private var isBusy: Boolean = false
 
     companion object {
         private const val TAG = "EditorFragment"
@@ -39,8 +40,8 @@ class EditorFragment : Fragment() {
 
         var uriString: String?
 
-        arguments?.let {
-            val args = EditorFragmentArgs.fromBundle(it)
+        arguments?.let { bundle ->
+            val args = EditorFragmentArgs.fromBundle(bundle)
             uriString = args.mediaUri
             Log.i(TAG, "Uri received: $uriString")
             val application = requireNotNull(activity).application
@@ -66,6 +67,10 @@ class EditorFragment : Fragment() {
 
             binding.stylesList.adapter = adapter
             binding.lifecycleOwner = this
+
+            editorViewModel.processBusyLiveData.observe(
+                viewLifecycleOwner,
+                Observer { isBusy = it })
 
             editorViewModel.stylesList.observe(viewLifecycleOwner, Observer { styles ->
                 binding.stylesList.adapter = adapter
@@ -93,6 +98,9 @@ class EditorFragment : Fragment() {
     }
 
     private fun applyStyle(style: Style) {
+        if (isBusy) return
+
+        Log.i(TAG, "applyStyle trigger")
         editorViewModel.applyStyle(
             requireContext(),
             editorViewModel.originalMediaUriLiveData.value!!,
@@ -101,6 +109,8 @@ class EditorFragment : Fragment() {
     }
 
     private fun openPhotosActivity() {
+        if (isBusy) return
+
         Log.i(TAG, "chooseCustomStyle: execute")
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "image/*"
