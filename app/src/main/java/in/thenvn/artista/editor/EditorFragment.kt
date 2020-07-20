@@ -2,7 +2,6 @@ package `in`.thenvn.artista.editor
 
 import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
-import `in`.thenvn.artista.StyleTransferModelExecutor
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
 import android.app.Activity
 import android.content.Intent
@@ -19,16 +18,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
-import java.util.concurrent.Executors
 
 class EditorFragment : Fragment() {
-
-    private lateinit var styleTransferModelExecutor: StyleTransferModelExecutor
-    private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private val mainScope = MainScope()
 
     private lateinit var editorViewModel: EditorViewModel
 
@@ -46,7 +37,7 @@ class EditorFragment : Fragment() {
             inflater, R.layout.fragment_editor, container, false
         )
 
-        var uriString: String? = null
+        var uriString: String?
 
         arguments?.let {
             val args = EditorFragmentArgs.fromBundle(it)
@@ -58,11 +49,6 @@ class EditorFragment : Fragment() {
             editorViewModel =
                 ViewModelProvider(this, viewModelFactory).get(EditorViewModel::class.java)
             binding.editorViewModel = editorViewModel
-
-            mainScope.async(inferenceThread) {
-                styleTransferModelExecutor = StyleTransferModelExecutor(requireContext())
-                Log.i(TAG, "Executor created")
-            }
 
             val adapter = StylesAdapter(
                 StylesAdapter.StyleClickListener(
@@ -110,9 +96,7 @@ class EditorFragment : Fragment() {
         editorViewModel.applyStyle(
             requireContext(),
             editorViewModel.originalMediaUriLiveData.value!!,
-            style,
-            styleTransferModelExecutor,
-            inferenceThread
+            style
         )
     }
 

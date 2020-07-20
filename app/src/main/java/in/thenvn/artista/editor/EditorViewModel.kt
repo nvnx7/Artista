@@ -6,15 +6,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import android.view.View
+import androidx.lifecycle.*
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 class EditorViewModel(
-    private val _originalMediaUri: Uri,
+    _originalMediaUri: Uri,
     application: Application
 ) : AndroidViewModel(application) {
 
@@ -22,46 +22,80 @@ class EditorViewModel(
         private const val TAG = "EditorViewModel"
     }
 
+    // Original image's URI
     private val _originalMediaUriLiveData = MutableLiveData<Uri>()
     val originalMediaUriLiveData: LiveData<Uri>
         get() = _originalMediaUriLiveData
 
+    // Final result bitmap of applying style to original image
     private val _styledBitmapLiveData = MutableLiveData<Bitmap>()
     val styledBitmap: LiveData<Bitmap>
         get() = _styledBitmapLiveData
 
+    // List of style images
     private val _stylesListLiveData = MutableLiveData<ArrayList<Style>>()
     val stylesList: LiveData<ArrayList<Style>>
         get() = _stylesListLiveData
 
+    // Integer between 0 and 100 representing progress of style transfer
     private val _progressLiveData = MutableLiveData<Int>()
     val progressLiveData: LiveData<Int>
         get() = _progressLiveData
 
+    // Boolean representing whether interpreter is busy processing
+    private val _processBusyLiveData = MutableLiveData<Boolean>()
+    val processBusyLiveData: LiveData<Boolean>
+        get() = _processBusyLiveData
+    val progressVisibility: LiveData<Int> = Transformations.map(_processBusyLiveData) { busy ->
+        if (busy) View.VISIBLE
+        else View.INVISIBLE
+    }
+
+    private lateinit var styleTransferModelExecutor: StyleTransferModelExecutor
+    private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+
     init {
+        _processBusyLiveData.value = true
         _originalMediaUriLiveData.value = _originalMediaUri
 
         _stylesListLiveData.value = ArrayList()
         application.assets!!.list("styles")!!.forEach {
-            _stylesListLiveData.value!!.add(Style(Uri.parse("file:///android_asset/styles/$it")))
+            _stylesListLiveData.value!!.add(
+                Style(
+                    Uri.parse("file:///android_asset/styles/$it"),
+                    Style.FIXED
+                )
+            )
         }
 
         Log.i(TAG, "list sample: ${_stylesListLiveData.value!!.get(0)}")
+
+        viewModelScope.launch(inferenceThread) {
+            styleTransferModelExecutor = StyleTransferModelExecutor(application)
+            _processBusyLiveData.postValue(false)
+            Log.i(TAG, "Executor created ")
+        }
     }
 
     fun applyStyle(
         context: Context,
         contentImageUri: Uri,
-        styleImageUri: Uri,
-        styleTransferModelExecutor: StyleTransferModelExecutor,
-        inferenceThread: ExecutorCoroutineDispatcher
+        style: Style
     ) {
+        _processBusyLiveData.value = true
         viewModelScope.launch(inferenceThread) {
             val result =
-                styleTransferModelExecutor.execute(context, contentImageUri, styleImageUri) {
+                styleTransferModelExecutor.execute(context, contentImageUri, style) {
                     _progressLiveData.postValue(it)
                 }
             _styledBitmapLiveData.postValue(result)
+            _processBusyLiveData.postValue(false)
+            _progressLiveData.postValue(0)
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.cancel()
     }
 }
