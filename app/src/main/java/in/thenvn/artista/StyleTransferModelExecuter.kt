@@ -61,8 +61,23 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             val inputsForPredict = arrayOf(styleArray)
             val outputsForPredict = HashMap<Int, Any>()
             val styleBottleneck = Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
+
             outputsForPredict[0] = styleBottleneck
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
+
+            // Extract the style bottleneck from content bitmap
+            val contentStyleBitmap = preProcessStyle(context, Style(contentImageUri, Style.CUSTOM))
+            val contentStyleArray = ImageUtils.bitmapToByteBuffer(
+                contentStyleBitmap,
+                STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
+            )
+            val contentStyleBottleneck =
+                Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
+
+            inputsForPredict[0] = contentStyleArray
+            outputsForPredict[0] = contentStyleBottleneck
+            interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
+            val styleBottleneckBlended = blendStyles(styleBottleneck, contentStyleBottleneck)
 
             // Perform style transfer on content image
             val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
@@ -75,24 +90,6 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             contentBitmap.recycle()
 
             for (i in 0 until bitmapFragments.numberOfFragments) {
-                val contentStyleBitmap = ImageUtils.scaleBitmapAndKeepRatio(
-                    bitmapFragments[i],
-                    STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
-                )
-                val contentStyleArray = ImageUtils.bitmapToByteBuffer(
-                    contentStyleBitmap,
-                    STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
-                )
-                val inputsStylePredict = arrayOf(contentStyleArray)
-                val outputsStylePredict = HashMap<Int, Any>()
-                val contentStyleBottleneck =
-                    Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
-                outputsStylePredict[0] = contentStyleBottleneck
-                interpreterPredict.runForMultipleInputsOutputs(
-                    inputsStylePredict,
-                    outputsStylePredict
-                )
-                val styleBottleneckBlended = blendStyles(styleBottleneck, contentStyleBottleneck)
 
                 val contentArray = ImageUtils.bitmapToByteBuffer(
                     bitmapFragments[i],
