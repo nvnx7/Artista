@@ -21,7 +21,6 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
         private const val OVERLAP_SIZE = 50
-        private const val CONTENT_BLEND_RATIO = 0.5F
         private const val STYLE_PREDICT_INT8_MODEL = "style_predict_quantized_256.tflite"
         private const val STYLE_TRANSFER_INT8_MODEL = "style_transfer_quantized_384.tflite"
         private const val STYLE_PREDICT_FLOAT16_MODEL = "style_predict_f16_256.tflite"
@@ -48,6 +47,7 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         context: Context,
         contentImageUri: Uri,
         style: Style,
+        blendRatio: Float,
         postProgress: (progress: Int) -> Unit
     ): Bitmap {
         try {
@@ -77,7 +77,9 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             inputsForPredict[0] = contentStyleArray
             outputsForPredict[0] = contentStyleBottleneck
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
-            val styleBottleneckBlended = blendStyles(styleBottleneck, contentStyleBottleneck)
+
+            val styleBottleneckBlended =
+                blendStyles(styleBottleneck, contentStyleBottleneck, blendRatio)
 
             // Perform style transfer on content image
             val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
@@ -130,13 +132,14 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
 
     private fun blendStyles(
         styleBottleneck: Array<Array<Array<FloatArray>>>,
-        contentStyleBottleneck: Array<Array<Array<FloatArray>>>
+        contentStyleBottleneck: Array<Array<Array<FloatArray>>>,
+        blendRatio: Float
     ): Array<Array<Array<FloatArray>>> {
         val blendedStyle = Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
 
         for (i in 0 until BOTTLENECK_SIZE) {
-            blendedStyle[0][0][0][i] = (CONTENT_BLEND_RATIO * contentStyleBottleneck[0][0][0][i]) +
-                    ((1 - CONTENT_BLEND_RATIO) * styleBottleneck[0][0][0][i])
+            blendedStyle[0][0][0][i] = ((1 - blendRatio) * contentStyleBottleneck[0][0][0][i]) +
+                    (blendRatio * styleBottleneck[0][0][0][i])
         }
 
         return blendedStyle

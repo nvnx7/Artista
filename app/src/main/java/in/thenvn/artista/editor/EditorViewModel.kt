@@ -32,6 +32,8 @@ class EditorViewModel(
     val styledBitmap: LiveData<Bitmap>
         get() = _styledBitmapLiveData
 
+    private var _blendRatio: Float = 0.5F
+
     // List of style images
     private val _stylesListLiveData = MutableLiveData<ArrayList<Style>>()
     val stylesList: LiveData<ArrayList<Style>>
@@ -85,13 +87,18 @@ class EditorViewModel(
         _processBusyLiveData.value = true
         viewModelScope.launch(inferenceThread) {
             val result =
-                styleTransferModelExecutor.execute(context, contentImageUri, style) {
+                styleTransferModelExecutor.execute(context, contentImageUri, style, _blendRatio) {
                     _progressLiveData.postValue(it)
                 }
             _styledBitmapLiveData.postValue(result)
             _processBusyLiveData.postValue(false)
             _progressLiveData.postValue(0)
         }
+    }
+
+    fun updateBlendRatio(ratio: Float) {
+        Log.i(TAG, "updateBlendRatio: $ratio")
+        _blendRatio = ratio
     }
 
     override fun onCleared() {
