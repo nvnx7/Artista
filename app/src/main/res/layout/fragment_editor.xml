@@ -27,7 +27,6 @@
                 android:id="@+id/preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/colorAccent"
                 app:srcUri="@{editorViewModel.originalMediaUriLiveData}"
                 android:contentDescription="@string/description_target_image"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -35,43 +34,6 @@
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:src="@tools:sample/avatars" />
-
-            <!--            <TextView-->
-            <!--                android:layout_width="wrap_content"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:layout_marginStart="16dp"-->
-            <!--                android:layout_marginBottom="16dp"-->
-            <!--                android:text="@string/label_style_blend_seek_bar"-->
-            <!--                android:labelFor="@+id/blending_seek_bar"-->
-            <!--                android:textAppearance="@style/TextAppearance.AppCompat.Body2"-->
-            <!--                app:layout_constraintBottom_toBottomOf="@id/blending_seek_bar"-->
-            <!--                app:layout_constraintLeft_toLeftOf="@id/blending_seek_bar" />-->
-
-            <!--            <SeekBar-->
-            <!--                android:id="@+id/blending_seek_bar"-->
-            <!--                style="@android:style/Widget.Material.SeekBar.Discrete"-->
-            <!--                android:layout_width="186dp"-->
-            <!--                android:layout_height="10dp"-->
-            <!--                android:layout_marginStart="32dp"-->
-            <!--                android:layout_marginBottom="32dp"-->
-            <!--                android:max="10"-->
-            <!--                android:progress="5"-->
-            <!--                android:tickMark="@null"-->
-            <!--                app:layout_constraintBottom_toBottomOf="parent"-->
-            <!--                app:layout_constraintStart_toStartOf="parent" />-->
-
-            <!--            <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-            <!--                android:id="@+id/floatingActionButton"-->
-            <!--                android:layout_width="wrap_content"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:layout_marginEnd="32dp"-->
-            <!--                android:clickable="true"-->
-            <!--                android:focusable="true"-->
-            <!--                app:layout_constraintBottom_toBottomOf="@id/blending_seek_bar"-->
-            <!--                app:layout_constraintRight_toRightOf="parent"-->
-            <!--                app:layout_constraintTop_toTopOf="@id/blending_seek_bar"-->
-            <!--                app:srcCompat="@android:drawable/stat_sys_download" />-->
-
 
             <FrameLayout
                 android:id="@+id/progress_holder"
@@ -84,19 +46,24 @@
 
                 <ProgressBar
                     android:id="@+id/progress_bar"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:layout_gravity="center" />
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="144dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:indeterminate="@{editorViewModel.progressIndeterminant}"
+                    android:max="100"
+                    android:progress="@{editorViewModel.progressLiveData}"
+                    android:progressBackgroundTint="#8003DAC5" />
 
                 <TextView
-                    android:id="@+id/progress_text"
+                    android:id="@+id/progress_message"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginTop="64dp"
-                    android:background="@android:color/background_light"
-                    android:text="@{editorViewModel.progressLiveData.toString()}"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                    android:layout_marginTop="16dp"
+                    android:text="@{editorViewModel.progressMessageLiveData}"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textColor="@android:color/white"
                     tools:text="10%" />
 
             </FrameLayout>

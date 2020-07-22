@@ -1,5 +1,6 @@
 package `in`.thenvn.artista.editor
 
+import `in`.thenvn.artista.R
 import `in`.thenvn.artista.StyleTransferModelExecutor
 import android.app.Application
 import android.content.Context
@@ -40,9 +41,17 @@ class EditorViewModel(
         get() = _stylesListLiveData
 
     // Integer between 0 and 100 representing progress of style transfer
+    // Negative integer will mean progress is indeterminant
     private val _progressLiveData = MutableLiveData<Int>()
     val progressLiveData: LiveData<Int>
         get() = _progressLiveData
+    val progressIndeterminant: LiveData<Boolean> =
+        Transformations.map(_progressLiveData) { progress -> progress < 0 }
+
+    // Message to the end - user about what is actually being done when busy
+    private val _progressMessageLiveData = MutableLiveData<String>()
+    val progressMessageLiveData: LiveData<String>
+        get() = _progressMessageLiveData
 
     // Boolean representing whether interpreter is busy processing
     private val _processBusyLiveData = MutableLiveData<Boolean>()
@@ -57,8 +66,11 @@ class EditorViewModel(
     private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     init {
+        _progressLiveData.value = -1
         _processBusyLiveData.value = true
         _originalMediaUriLiveData.value = _originalMediaUri
+        _progressMessageLiveData.value =
+            application.resources.getString(R.string.message_loading_model)
 
         _stylesListLiveData.value = ArrayList()
         application.assets!!.list("styles")!!.forEach {
@@ -70,11 +82,10 @@ class EditorViewModel(
             )
         }
 
-        Log.i(TAG, "list sample: ${_stylesListLiveData.value!!.get(0)}")
-
         viewModelScope.launch(inferenceThread) {
-            styleTransferModelExecutor = StyleTransferModelExecutor(application)
+            styleTransferModelExecutor = StyleTransferModelExecutor(application.applicationContext)
             _processBusyLiveData.postValue(false)
+            _progressLiveData.postValue(0)
             Log.i(TAG, "Executor created ")
         }
     }
@@ -85,6 +96,9 @@ class EditorViewModel(
         style: Style
     ) {
         _processBusyLiveData.value = true
+        _progressMessageLiveData.value =
+            getApplication<Application>().resources.getString(R.string.message_performing_inference)
+
         viewModelScope.launch(inferenceThread) {
             val result =
                 styleTransferModelExecutor.execute(context, contentImageUri, style, _blendRatio) {
