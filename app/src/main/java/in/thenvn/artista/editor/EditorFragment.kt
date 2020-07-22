@@ -84,7 +84,7 @@ class EditorFragment : Fragment() {
                     .into(binding.preview)
             })
 
-            binding.blendingSeekBar.setOnSeekBarChangeListener(object :
+            binding.controls.blendingSeekBar.setOnSeekBarChangeListener(object :
                 SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(
                     seekBar: SeekBar?,
