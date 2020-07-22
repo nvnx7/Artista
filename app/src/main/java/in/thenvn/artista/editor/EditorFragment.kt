@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -38,6 +39,8 @@ class EditorFragment : Fragment() {
         val binding: FragmentEditorBinding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_editor, container, false
         )
+
+        requireNotNull(activity as AppCompatActivity).supportActionBar?.hide()
 
         var uriString: String?
 
