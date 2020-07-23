@@ -42,13 +42,15 @@ dependencies {
     def tfl_version = "0.0.0-nightly"
     def glide_version = "4.9.0"
     def easypermissions_version = "3.0.0"
-    def viewmodel_scope_version = "2.3.0-alpha05"
+    def viewmodel_scope_version = "2.3.0-alpha06"
     def nav_version = "2.3.0"
     def exifinterface_version = "1.2.0"
+    def activity_version = "1.2.0-alpha07"
+    def fragment_version = "1.3.0-alpha07"
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.3.0'
+    implementation 'androidx.core:core-ktx:1.3.1'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     testImplementation 'junit:junit:4.12'
@@ -75,4 +77,8 @@ dependencies {
 
     // Exif Interface
     implementation "androidx.exifinterface:exifinterface:$exifinterface_version"
+
+    // Activity & Fragment
+    implementation "androidx.activity:activity-ktx:$activity_version"
+    implementation "androidx.fragment:fragment-ktx:$fragment_version"
 }
