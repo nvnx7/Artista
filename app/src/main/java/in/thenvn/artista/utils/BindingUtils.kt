@@ -2,6 +2,7 @@ package `in`.thenvn.artista.utils
 
 import `in`.thenvn.artista.editor.Style
 import `in`.thenvn.artista.media.MediaItem
+import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
@@ -30,4 +31,9 @@ fun ImageView.setSrcStyle(style: Style) {
         .override(300)
         .centerInside()
         .into(this)
+}
+
+@BindingAdapter("srcBitmap")
+fun ImageView.setSrcBitmap(bitmap: Bitmap?) {
+    bitmap?.let { setImageBitmap(bitmap) }
 }
