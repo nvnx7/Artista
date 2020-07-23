@@ -63,7 +63,4 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
         }
     }
 
-    fun onMediaItemClicked(mediaItem: MediaItem) {
-//        val intent = Intent(contex)
-    }
 }

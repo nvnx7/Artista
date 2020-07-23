@@ -7,7 +7,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import android.view.View
 import androidx.lifecycle.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
@@ -57,10 +56,6 @@ class EditorViewModel(
     private val _processBusyLiveData = MutableLiveData<Boolean>()
     val processBusyLiveData: LiveData<Boolean>
         get() = _processBusyLiveData
-    val progressVisibility: LiveData<Int> = Transformations.map(_processBusyLiveData) { busy ->
-        if (busy) View.VISIBLE
-        else View.INVISIBLE
-    }
 
     private lateinit var styleTransferModelExecutor: StyleTransferModelExecutor
     private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()

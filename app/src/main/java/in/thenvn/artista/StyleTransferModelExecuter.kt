@@ -151,14 +151,13 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
                 ImageUtils.loadBitmapFromAssets(context, "styles/${style.uri.lastPathSegment}")
             }
             Style.CUSTOM -> {
-                val b = Glide.with(context)
+                Glide.with(context)
                     .asBitmap()
                     .load(style.uri)
                     .override(STYLE_IMAGE_SIZE)
                     .centerCrop()
                     .submit()
                     .get()
-                b
             }
             else -> throw IllegalArgumentException("Style type unknown!")
         }
