@@ -3,8 +3,6 @@ package `in`.thenvn.artista.editor
 import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
-import android.app.Activity
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -28,8 +27,13 @@ class EditorFragment : Fragment() {
 
     companion object {
         private const val TAG = "EditorFragment"
-        private const val RC_PICK_IMAGE = 1000
     }
+
+    private val photosResultLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) applyStyle(Style(uri, Style.CUSTOM))
+            else Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -105,16 +109,6 @@ class EditorFragment : Fragment() {
         return binding.root
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK && requestCode == RC_PICK_IMAGE) {
-            val uri = data!!.data!!
-            applyStyle(Style(uri, Style.CUSTOM))
-        } else {
-            Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     private fun applyStyle(style: Style) {
         if (isBusy) return
 
@@ -128,10 +122,6 @@ class EditorFragment : Fragment() {
 
     private fun openPhotosActivity() {
         if (isBusy) return
-
-        Log.i(TAG, "chooseCustomStyle: execute")
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "image/*"
-        startActivityForResult(intent, RC_PICK_IMAGE)
+        photosResultLauncher.launch("image/*")
     }
 }
