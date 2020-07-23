@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="editorViewModel"
             type="in.thenvn.artista.editor.EditorViewModel" />
@@ -27,12 +26,13 @@
                 android:id="@+id/preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:srcUri="@{editorViewModel.originalMediaUriLiveData}"
                 android:contentDescription="@string/description_target_image"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.3"
+                app:srcUri="@{editorViewModel.originalMediaUriLiveData}"
                 tools:src="@tools:sample/avatars" />
 
             <FrameLayout
@@ -41,8 +41,7 @@
                 android:layout_height="match_parent"
                 android:background="#CC000000"
                 android:clickable="true"
-                android:focusable="true"
-                android:visibility="@{editorViewModel.progressVisibility}">
+                android:focusable="true">
 
                 <ProgressBar
                     android:id="@+id/progress_bar"

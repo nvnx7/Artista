@@ -3,6 +3,10 @@ package `in`.thenvn.artista.editor
 import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
+import android.animation.Animator
+import android.animation.AnimatorInflater
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +27,10 @@ import com.bumptech.glide.Glide
 class EditorFragment : Fragment() {
 
     private lateinit var editorViewModel: EditorViewModel
+
+    private lateinit var fadeInAnimator: ObjectAnimator
+    private lateinit var fadeOutAnimator: ObjectAnimator
+
     private var isBusy: Boolean = false
 
     companion object {
@@ -76,9 +84,13 @@ class EditorFragment : Fragment() {
             binding.stylesList.adapter = adapter
             binding.lifecycleOwner = this
 
-            editorViewModel.processBusyLiveData.observe(
-                viewLifecycleOwner,
-                Observer { isBusy = it })
+            loadAnimators(binding.progressHolder)
+
+            editorViewModel.processBusyLiveData.observe(viewLifecycleOwner, Observer {
+                isBusy = it
+                if (isBusy) fadeInAnimator.start()
+                else fadeOutAnimator.start()
+            })
 
             editorViewModel.stylesList.observe(viewLifecycleOwner, Observer { styles ->
                 binding.stylesList.adapter = adapter
@@ -123,5 +135,35 @@ class EditorFragment : Fragment() {
     private fun openPhotosActivity() {
         if (isBusy) return
         photosResultLauncher.launch("image/*")
+    }
+
+    private fun loadAnimators(targetView: View) {
+        fadeInAnimator =
+            (AnimatorInflater.loadAnimator(
+                requireContext(),
+                R.animator.animator_fade_in
+            ) as ObjectAnimator)
+                .apply {
+                    target = targetView
+                    addListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationStart(animation: Animator?) {
+                            targetView.visibility = View.VISIBLE
+                        }
+                    })
+                }
+
+        fadeOutAnimator =
+            (AnimatorInflater.loadAnimator(
+                requireContext(),
+                R.animator.animator_fade_out
+            ) as ObjectAnimator)
+                .apply {
+                    target = targetView
+                    addListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator?) {
+                            targetView.visibility = View.INVISIBLE
+                        }
+                    })
+                }
     }
 }
