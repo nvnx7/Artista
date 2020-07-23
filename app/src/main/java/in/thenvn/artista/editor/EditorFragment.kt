@@ -3,6 +3,7 @@ package `in`.thenvn.artista.editor
 import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
+import `in`.thenvn.artista.utils.setSrcUri
 import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.animation.AnimatorListenerAdapter
@@ -22,7 +23,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 
 class EditorFragment : Fragment() {
 
@@ -93,15 +93,11 @@ class EditorFragment : Fragment() {
             })
 
             editorViewModel.stylesList.observe(viewLifecycleOwner, Observer { styles ->
-                binding.stylesList.adapter = adapter
                 adapter.submitList(styles)
             })
 
-            editorViewModel.styledBitmap.observe(viewLifecycleOwner, Observer { bitmap ->
-                Glide.with(this)
-                    .load(bitmap)
-                    .into(binding.preview)
-            })
+            // Set initial preview as the original image itself
+            binding.preview.setSrcUri(Uri.parse(uriString))
 
             binding.controls.blendingSeekBar.setOnSeekBarChangeListener(object :
                 SeekBar.OnSeekBarChangeListener {
@@ -127,7 +123,7 @@ class EditorFragment : Fragment() {
         Log.i(TAG, "applyStyle trigger")
         editorViewModel.applyStyle(
             requireContext(),
-            editorViewModel.originalMediaUriLiveData.value!!,
+            editorViewModel.originalMediaUri,
             style
         )
     }

@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 class EditorViewModel(
-    _originalMediaUri: Uri,
+    private val _originalMediaUri: Uri,
     application: Application
 ) : AndroidViewModel(application) {
 
@@ -22,14 +22,12 @@ class EditorViewModel(
         private const val TAG = "EditorViewModel"
     }
 
-    // Original image's URI
-    private val _originalMediaUriLiveData = MutableLiveData<Uri>()
-    val originalMediaUriLiveData: LiveData<Uri>
-        get() = _originalMediaUriLiveData
+    val originalMediaUri: Uri
+        get() = _originalMediaUri
 
     // Final result bitmap of applying style to original image
     private val _styledBitmapLiveData = MutableLiveData<Bitmap>()
-    val styledBitmap: LiveData<Bitmap>
+    val styledBitmapLiveData: LiveData<Bitmap>
         get() = _styledBitmapLiveData
 
     private var _blendRatio: Float = 0.5F
@@ -63,7 +61,7 @@ class EditorViewModel(
     init {
         _progressLiveData.value = -1
         _processBusyLiveData.value = true
-        _originalMediaUriLiveData.value = _originalMediaUri
+
         _progressMessageLiveData.value =
             application.resources.getString(R.string.message_loading_model)
 
