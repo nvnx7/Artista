@@ -16,6 +16,7 @@ class StylesAdapter(private val clickListener: StyleClickListener) :
         const val TYPE_STYLE = 1
     }
 
+    private var lastSelectionIndex: Int = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         if (viewType == TYPE_BUTTON) return ButtonViewHolder.from(parent)
@@ -30,6 +31,16 @@ class StylesAdapter(private val clickListener: StyleClickListener) :
     override fun getItemViewType(position: Int): Int {
         if (position == 0) return TYPE_BUTTON
         return TYPE_STYLE
+    }
+
+    fun showAsSelected(style: Style) {
+        if (lastSelectionIndex >= 0) {
+            currentList[lastSelectionIndex].selected = false
+        }
+        notifyItemChanged(lastSelectionIndex)
+        style.selected = true
+        lastSelectionIndex = currentList.indexOf(style)
+        notifyItemChanged(lastSelectionIndex)
     }
 
     class StyleViewHolder private constructor(val binding: ListItemStyleBinding) :
@@ -80,7 +91,10 @@ class StylesAdapter(private val clickListener: StyleClickListener) :
         val styleClickListener: (style: Style) -> Unit,
         val buttonClickListener: () -> Unit
     ) {
-        fun onStyleClick(style: Style) = styleClickListener(style)
+        fun onStyleClick(style: Style) {
+            styleClickListener(style)
+        }
+
         fun onButtonClick() = buttonClickListener()
     }
 }

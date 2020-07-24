@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 class EditorFragment : Fragment() {
 
     private lateinit var editorViewModel: EditorViewModel
+    private lateinit var adapter: StylesAdapter
 
     private lateinit var fadeInAnimator: ObjectAnimator
     private lateinit var fadeOutAnimator: ObjectAnimator
@@ -67,7 +68,7 @@ class EditorFragment : Fragment() {
                 ViewModelProvider(this, viewModelFactory).get(EditorViewModel::class.java)
             binding.editorViewModel = editorViewModel
 
-            val adapter = StylesAdapter(
+            adapter = StylesAdapter(
                 StylesAdapter.StyleClickListener(
                     { style -> applyStyle(style) },
                     { openPhotosActivity() }
@@ -120,6 +121,7 @@ class EditorFragment : Fragment() {
     private fun applyStyle(style: Style) {
         if (isBusy) return
 
+        adapter.showAsSelected(style)
         Log.i(TAG, "applyStyle trigger")
         editorViewModel.applyStyle(
             requireContext(),
