@@ -4,6 +4,7 @@ import `in`.thenvn.artista.editor.Style
 import `in`.thenvn.artista.media.MediaItem
 import android.graphics.Bitmap
 import android.net.Uri
+import android.view.View
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
@@ -36,4 +37,9 @@ fun ImageView.setSrcStyle(style: Style) {
 @BindingAdapter("srcBitmap")
 fun ImageView.setSrcBitmap(bitmap: Bitmap?) {
     bitmap?.let { setImageBitmap(bitmap) }
+}
+
+@BindingAdapter("invisible")
+fun View.setInvisible(isInvisible: Boolean) {
+    visibility = if (isInvisible) View.INVISIBLE else View.VISIBLE
 }
