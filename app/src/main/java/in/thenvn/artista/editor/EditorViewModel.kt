@@ -93,12 +93,6 @@ class EditorViewModel(
             getApplication<Application>().resources.getString(R.string.message_performing_inference)
 
         viewModelScope.launch(inferenceThread) {
-            if (style.type == Style.CUSTOM) {
-                val newList = _stylesListLiveData.value
-                newList?.add(1, style)
-                _stylesListLiveData.postValue(newList!!)
-            }
-
             val result =
                 styleTransferModelExecutor.execute(context, contentImageUri, style, _blendRatio) {
                     _progressLiveData.postValue(it)
@@ -112,6 +106,12 @@ class EditorViewModel(
     fun updateBlendRatio(ratio: Float) {
         Log.i(TAG, "updateBlendRatio: $ratio")
         _blendRatio = ratio
+    }
+
+    fun addStyle(style: Style) {
+        val newList: ArrayList<Style> = _stylesListLiveData.value!!
+        newList.add(1, style)
+        _stylesListLiveData.value = newList
     }
 
     override fun onCleared() {
