@@ -15,16 +15,25 @@
     </data>
 
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:onClick="@{() -> clickListener.onStyleClick(style)}">
 
 
         <ImageView
             android:id="@+id/style_image"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             app:srcStyle="@{style}"
             tools:srcCompat="@tools:sample/avatars" />
+
+        <ImageView
+            android:id="@+id/selection_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#CC000000"
+            android:scaleType="centerInside"
+            app:invisible="@{!style.selected}"
+            app:srcCompat="@android:drawable/ic_media_play" />
     </FrameLayout>
 </layout>
