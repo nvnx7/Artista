@@ -34,7 +34,7 @@ class EditorViewModel(
 
     // List of style images
     private val _stylesListLiveData = MutableLiveData<ArrayList<Style>>()
-    val stylesList: LiveData<ArrayList<Style>>
+    val stylesListLiveData: LiveData<ArrayList<Style>>
         get() = _stylesListLiveData
 
     // Integer between 0 and 100 representing progress of style transfer
@@ -93,6 +93,12 @@ class EditorViewModel(
             getApplication<Application>().resources.getString(R.string.message_performing_inference)
 
         viewModelScope.launch(inferenceThread) {
+            if (style.type == Style.CUSTOM) {
+                val newList = _stylesListLiveData.value
+                newList?.add(1, style)
+                _stylesListLiveData.postValue(newList!!)
+            }
+
             val result =
                 styleTransferModelExecutor.execute(context, contentImageUri, style, _blendRatio) {
                     _progressLiveData.postValue(it)

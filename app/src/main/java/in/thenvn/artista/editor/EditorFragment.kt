@@ -74,8 +74,6 @@ class EditorFragment : Fragment() {
                 )
             )
 
-            adapter.submitList(editorViewModel.stylesList.value)
-
             val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             binding.stylesList.layoutManager = layoutManager
             val space = resources.getDimensionPixelSize(R.dimen.item_space)
@@ -92,8 +90,10 @@ class EditorFragment : Fragment() {
                 else fadeOutAnimator.start()
             })
 
-            editorViewModel.stylesList.observe(viewLifecycleOwner, Observer { styles ->
+            editorViewModel.stylesListLiveData.observe(viewLifecycleOwner, Observer { styles ->
+                Log.i(TAG, "onCreateView: List changed, size ${styles.size}")
                 adapter.submitList(styles)
+                adapter.notifyItemInserted(1)
             })
 
             // Set initial preview as the original image itself
