@@ -28,8 +28,8 @@ fun ImageView.setSrcUri(uri: Uri) {
 fun ImageView.setSrcStyle(style: Style) {
     Glide.with(context)
         .load(style.uri)
-        .override(300)
-        .centerInside()
+        .override(250)
+        .centerCrop()
         .into(this)
 }
 
