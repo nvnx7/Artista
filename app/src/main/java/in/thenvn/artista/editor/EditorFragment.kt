@@ -40,8 +40,11 @@ class EditorFragment : Fragment() {
 
     private val photosResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            if (uri != null) applyStyle(Style(uri, Style.CUSTOM))
-            else Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
+            if (uri != null) {
+                val style = Style(uri, Style.CUSTOM)
+                editorViewModel.addStyle(style)
+                applyStyle(style)
+            } else Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
         }
 
     override fun onCreateView(
@@ -93,8 +96,7 @@ class EditorFragment : Fragment() {
 
             editorViewModel.stylesListLiveData.observe(viewLifecycleOwner, Observer { styles ->
                 Log.i(TAG, "onCreateView: List changed, size ${styles.size}")
-                adapter.submitList(styles)
-                adapter.notifyItemInserted(1)
+                adapter.updateList(styles)
             })
 
             // Set initial preview as the original image itself
@@ -121,7 +123,7 @@ class EditorFragment : Fragment() {
     private fun applyStyle(style: Style) {
         if (isBusy) return
 
-        adapter.showAsSelected(style)
+        adapter.showAsSelection(style)
         Log.i(TAG, "applyStyle trigger")
         editorViewModel.applyStyle(
             requireContext(),
