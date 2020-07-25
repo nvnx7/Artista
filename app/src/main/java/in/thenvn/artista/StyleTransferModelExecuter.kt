@@ -14,10 +14,11 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
 class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
-
+//TODO Check if gpu available
     companion object {
-        private const val TAG = "StyleTransferModelExecutor"
-        private const val STYLE_IMAGE_SIZE = 256
+    private const val TAG = "StyleTransferModelExecutor"
+    private const val MAX_SIZE = 1024
+    private const val STYLE_IMAGE_SIZE = 256
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
         private const val OVERLAP_SIZE = 50
@@ -61,7 +62,6 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             val inputsForPredict = arrayOf(styleArray)
             val outputsForPredict = HashMap<Int, Any>()
             val styleBottleneck = Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
-
             outputsForPredict[0] = styleBottleneck
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
 
@@ -73,7 +73,6 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             )
             val contentStyleBottleneck =
                 Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
-
             inputsForPredict[0] = contentStyleArray
             outputsForPredict[0] = contentStyleBottleneck
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
@@ -82,7 +81,7 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
                 blendStyles(styleBottleneck, contentStyleBottleneck, blendRatio)
 
             // Perform style transfer on content image
-            val contentBitmap = ImageUtils.decodeBitmap(context, contentImageUri)
+            val contentBitmap = ImageUtils.loadScaledBitmap(context, contentImageUri, MAX_SIZE)
 
             val bitmapFragments = BitmapFragments(
                 contentBitmap,
