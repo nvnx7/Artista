@@ -207,7 +207,7 @@ abstract class ImageUtils {
         fun convertArrayToBitmap(
             imageArray: Array<Array<Array<FloatArray>>>,
             imageWidth: Int,
-            imageHeight: Int
+            imageHeight: Int = imageWidth
         ): Bitmap {
             val conf = Bitmap.Config.ARGB_8888
             val bitmap = Bitmap.createBitmap(imageWidth, imageHeight, conf)
@@ -226,7 +226,7 @@ abstract class ImageUtils {
             return bitmap
         }
 
-        fun createEmptyBitmap(width: Int, height: Int, color: Int = 0): Bitmap {
+        fun createEmptyBitmap(width: Int, height: Int = width, color: Int = 0): Bitmap {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
             if (color != 0) bitmap.eraseColor(color)
             return bitmap
@@ -252,7 +252,7 @@ abstract class ImageUtils {
          *
          * @return A new padded bitmap
          */
-        fun padBitmap(bitmapIn: Bitmap, finalWidth: Int, finalHeight: Int): Bitmap {
+        fun padBitmap(bitmapIn: Bitmap, finalWidth: Int, finalHeight: Int = finalWidth): Bitmap {
             if (bitmapIn.width > finalWidth || bitmapIn.height > finalHeight) {
                 throw IllegalArgumentException("Provided bitmap dimensions should be less than final dimensions")
             }

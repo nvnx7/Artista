@@ -145,21 +145,13 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
     }
 
     private fun preProcessStyle(context: Context, style: Style): Bitmap {
-        return when (style.type) {
-            Style.FIXED -> {
-                ImageUtils.loadBitmapFromAssets(context, "styles/${style.uri.lastPathSegment}")
-            }
-            Style.CUSTOM -> {
-                Glide.with(context)
-                    .asBitmap()
-                    .load(style.uri)
-                    .override(STYLE_IMAGE_SIZE)
-                    .centerCrop()
-                    .submit()
-                    .get()
-            }
-            else -> throw IllegalArgumentException("Style type unknown!")
-        }
+        return Glide.with(context)
+            .asBitmap()
+            .load(style.uri)
+            .override(STYLE_IMAGE_SIZE)
+            .centerCrop()
+            .submit()
+            .get()
     }
 
     private fun getInterpreter(
