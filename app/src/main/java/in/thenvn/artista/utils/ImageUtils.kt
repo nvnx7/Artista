@@ -99,44 +99,15 @@ abstract class ImageUtils {
             return bitmap
         }
 
-        fun scaleBitmapAndKeepRatio(
-            targetBitmap: Bitmap,
-            reqWidthInPixels: Int,
-            reqHeightInPixels: Int
-        ): Bitmap {
-            if (targetBitmap.height == reqHeightInPixels
-                && targetBitmap.width == reqWidthInPixels
-            ) return targetBitmap
-
-            val matrix = Matrix()
-            matrix.setRectToRect(
-                RectF(0F, 0F, targetBitmap.width.toFloat(), targetBitmap.height.toFloat()),
-                RectF(0F, 0F, reqWidthInPixels.toFloat(), reqHeightInPixels.toFloat()),
-                Matrix.ScaleToFit.FILL
-            )
-
-            val bitmap = Bitmap.createBitmap(
-                targetBitmap, 0, 0,
-                targetBitmap.width, targetBitmap.height,
-                matrix, true
-            )
-
-            return bitmap
-        }
-
         fun bitmapToByteBuffer(
-            bitmapIn: Bitmap,
-            width: Int,
-            height: Int,
+            bitmap: Bitmap,
             mean: Float = 0.0F,
             std: Float = 255.0F
         ): ByteBuffer {
-            val bitmap =
-                scaleBitmapAndKeepRatio(
-                    bitmapIn,
-                    width,
-                    height
-                )
+
+            val width = bitmap.width
+            val height = bitmap.height
+
             val inputImage = ByteBuffer.allocateDirect(1 * width * height * 3 * 4)
             inputImage.order(ByteOrder.nativeOrder())
             inputImage.rewind()

@@ -54,10 +54,7 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         try {
             // Extract the style bottleneck from style bitmap
             val styleBitmap = preProcessStyle(context, style)
-            val styleArray = ImageUtils.bitmapToByteBuffer(
-                styleBitmap,
-                STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
-            )
+            val styleArray = ImageUtils.bitmapToByteBuffer(styleBitmap)
 
             val inputsForPredict = arrayOf(styleArray)
             val outputsForPredict = HashMap<Int, Any>()
@@ -67,10 +64,8 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
 
             // Extract the style bottleneck from content bitmap
             val contentStyleBitmap = preProcessStyle(context, Style(contentImageUri, Style.CUSTOM))
-            val contentStyleArray = ImageUtils.bitmapToByteBuffer(
-                contentStyleBitmap,
-                STYLE_IMAGE_SIZE, STYLE_IMAGE_SIZE
-            )
+            val contentStyleArray = ImageUtils.bitmapToByteBuffer(contentStyleBitmap)
+
             val contentStyleBottleneck =
                 Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
             inputsForPredict[0] = contentStyleArray
@@ -91,13 +86,8 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             contentBitmap.recycle()
 
             for (i in 0 until bitmapFragments.numberOfFragments) {
-
-                val contentArray = ImageUtils.bitmapToByteBuffer(
-                    bitmapFragments[i],
-                    CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE
-                )
+                val contentArray = ImageUtils.bitmapToByteBuffer(bitmapFragments[i])
                 val inputForStyleTransfer = arrayOf(contentArray, styleBottleneckBlended)
-
                 val outputForStyleTransfer = HashMap<Int, Any>()
                 val outputImage =
                     Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
@@ -109,17 +99,12 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
                 )
 
                 val styledFragment =
-                    ImageUtils.convertArrayToBitmap(
-                        outputImage,
-                        CONTENT_IMAGE_SIZE,
-                        CONTENT_IMAGE_SIZE
-                    )
+                    ImageUtils.convertArrayToBitmap(outputImage, CONTENT_IMAGE_SIZE)
 
                 bitmapFragments[i] = styledFragment
 
                 val progress = (i + 1) * 100 / bitmapFragments.numberOfFragments
                 postProgress(progress)
-                Log.i(TAG, "Progress styling bitmap: ${i + 1}/${bitmapFragments.numberOfFragments}")
             }
 
             return bitmapFragments.patchFragments()
