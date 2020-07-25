@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import androidx.core.graphics.ColorUtils
 import androidx.exifinterface.media.ExifInterface
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
@@ -229,6 +230,16 @@ abstract class ImageUtils {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
             if (color != 0) bitmap.eraseColor(color)
             return bitmap
+        }
+
+        fun loadScaledBitmap(context: Context, uri: Uri, maxSize: Int): Bitmap {
+            return Glide
+                .with(context)
+                .asBitmap()
+                .load(uri)
+                .apply(RequestOptions().override(maxSize).fitCenter())
+                .submit()
+                .get()
         }
 
         /**
