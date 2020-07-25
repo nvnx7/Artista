@@ -2,6 +2,7 @@ package `in`.thenvn.artista.editor
 
 import `in`.thenvn.artista.R
 import `in`.thenvn.artista.StyleTransferModelExecutor
+import `in`.thenvn.artista.utils.ImageUtils
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
@@ -112,6 +113,10 @@ class EditorViewModel(
         val newList: ArrayList<Style> = _stylesListLiveData.value!!
         newList.add(1, style)
         _stylesListLiveData.value = newList
+    }
+
+    fun saveStyledBitmap() {
+        ImageUtils.savePicture(getApplication(), styledBitmapLiveData.value!!)
     }
 
     override fun onCleared() {

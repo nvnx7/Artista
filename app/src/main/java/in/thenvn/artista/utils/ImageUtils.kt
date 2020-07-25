@@ -1,12 +1,18 @@
 package `in`.thenvn.artista.utils
 
+import `in`.thenvn.artista.R
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.graphics.ColorUtils
 import androidx.exifinterface.media.ExifInterface
 import com.bumptech.glide.Glide
 import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.round
@@ -293,6 +299,47 @@ abstract class ImageUtils {
             }
 
             bitmapIn.setPixels(pixels, 0, bitmapIn.width, 0, 0, bitmapIn.width, bitmapIn.height)
+        }
+
+        /**
+         * Helper method to write the bitmap to the standard public Pictures directory
+         * of the device.
+         */
+        fun savePicture(context: Context, bitmap: Bitmap) {
+            val dirName = context.resources.getString(R.string.app_name)
+            val fileName = "${dirName}_${System.currentTimeMillis()}.jpg"
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        "${Environment.DIRECTORY_PICTURES}/$dirName"
+                    )
+                }
+
+                val uri: Uri? = context.contentResolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    contentValues
+                )
+                uri?.let {
+                    val out = context.contentResolver.openOutputStream(uri)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                    out?.close()
+                }
+            } else {
+                val dirPath =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                        .toString() +
+                            "${File.separator}${dirName}"
+                val file = File(dirPath)
+                if (!file.exists()) file.mkdir()
+                val imageFile = File(dirPath, fileName)
+                val out = FileOutputStream(imageFile)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                out.close()
+            }
         }
     }
 }
