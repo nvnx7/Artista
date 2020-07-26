@@ -25,7 +25,7 @@ class MediaSelectionFragment : Fragment() {
 
     companion object {
         private const val TAG = "MediaSelectionFragment"
-        val permissionString = Manifest.permission.WRITE_EXTERNAL_STORAGE
+        private const val PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE
     }
 
     private lateinit var capturedPicUri: Uri
@@ -58,12 +58,8 @@ class MediaSelectionFragment : Fragment() {
         )
 
         requireNotNull(activity as AppCompatActivity).supportActionBar?.show()
-        val application = requireNotNull(this.activity).application
 
-        val viewModelFactory =
-            MediaViewModelFactory(application)
-        mediaViewModel =
-            ViewModelProvider(this, viewModelFactory).get(MediaViewModel::class.java)
+        mediaViewModel = ViewModelProvider(this).get(MediaViewModel::class.java)
 
         binding.mediaViewModel = mediaViewModel
 
@@ -104,7 +100,7 @@ class MediaSelectionFragment : Fragment() {
         Log.i(TAG, "onResume: ")
         // If user possibly returns from settings after giving permissions update the status in
         // view model so that data is fetched
-        if (PermissionUtils.isPermissionGranted(requireContext(), permissionString)) {
+        if (PermissionUtils.isPermissionGranted(requireContext(), PERMISSION_STORAGE)) {
             Log.i(TAG, "onResume: Permission granted")
             if (mediaViewModel.permissionGrantedLiveData.value == false) {
                 Log.i(TAG, "onResume: Updating status in view model")
@@ -119,15 +115,15 @@ class MediaSelectionFragment : Fragment() {
             // Already granted continue with loading data
             PermissionUtils.isPermissionGranted(
                 requireContext(),
-                permissionString
+                PERMISSION_STORAGE
             ) -> mediaViewModel.updatePermissionGrantedStatus(true)
 
             // Ask permission showing rationale without settings option
-            shouldShowRequestPermissionRationale(permissionString) -> askPermission()
+            shouldShowRequestPermissionRationale(PERMISSION_STORAGE) -> askPermission()
 
 
             // Try asking for permission
-            else -> requestPermissionLauncher.launch(permissionString)
+            else -> requestPermissionLauncher.launch(PERMISSION_STORAGE)
 
         }
     }
@@ -142,7 +138,7 @@ class MediaSelectionFragment : Fragment() {
                 requireContext(),
                 resources.getString(R.string.permission_rationale)
             ) {
-                requestPermissionLauncher.launch(permissionString)
+                requestPermissionLauncher.launch(PERMISSION_STORAGE)
             }
         }
     }
