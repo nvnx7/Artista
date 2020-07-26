@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
@@ -69,10 +70,7 @@ class EditorViewModel(
         _stylesListLiveData.value = ArrayList()
         application.assets!!.list("styles")!!.forEach {
             _stylesListLiveData.value!!.add(
-                Style(
-                    Uri.parse("file:///android_asset/styles/$it"),
-                    Style.FIXED
-                )
+                Style(Uri.parse("file:///android_asset/styles/$it"), Style.FIXED)
             )
         }
 
@@ -105,7 +103,6 @@ class EditorViewModel(
     }
 
     fun updateBlendRatio(ratio: Float) {
-        Log.i(TAG, "updateBlendRatio: $ratio")
         _blendRatio = ratio
     }
 
@@ -116,7 +113,10 @@ class EditorViewModel(
     }
 
     fun saveStyledBitmap() {
-        ImageUtils.savePicture(getApplication(), styledBitmapLiveData.value!!)
+        _styledBitmapLiveData.value?.let {
+            ImageUtils.savePicture(getApplication(), _styledBitmapLiveData.value!!)
+            Toast.makeText(getApplication(), "Art Saved!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCleared() {
