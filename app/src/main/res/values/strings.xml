@@ -5,4 +5,8 @@
     <string name="label_style_blend_seek_bar">STYLE BLEND</string>
     <string name="message_loading_model">Preparing the Artist…</string>
     <string name="message_performing_inference">Painting your Art…</string>
+    <string name="permission_rationale">Storage permission is required to access photos you want to
+        edit and save after editing.</string>
+    <string name="permission_rationale_setting">Storage permission is required to access photos you want to
+        edit and save after editing. Please allow the permission in settings.</string>
 </resources>
