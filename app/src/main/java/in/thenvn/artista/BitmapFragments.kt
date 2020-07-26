@@ -50,19 +50,23 @@ class BitmapFragments(
         get() = nCols * nRows
 
     /**
-     * Original dimensions of passed input bitmap
+     * Original dimensions of passed input bitmap if now padded else includes
+     * padded dimensions
      */
-    private val originalWidth: Int = bitmap.width
-    private val originalHeight: Int = bitmap.height
+    private var bitmapWidth: Int = bitmap.width
+    private var bitmapHeight: Int = bitmap.height
+
+    /**
+     * Indices at which padding starts in case bitmap was padded.
+     * Negative int indicate it was not padded for that dimension
+     */
+    private var padLeft: Int = -1
+    private var padTop: Int = -1
 
     init {
 
         if (overlapSize > fragmentWidth || overlapSize > fragmentHeight) {
             throw IllegalArgumentException("Overlap size greater than fragment dimension!")
-        }
-
-        if (fragmentWidth > originalWidth || fragmentHeight > originalHeight) {
-            throw IllegalArgumentException("Fragments dimensions higher than input bitmap!")
         }
 
         fragments = Array(nCols * nRows) {
@@ -71,6 +75,18 @@ class BitmapFragments(
                 fragmentHeight,
                 Bitmap.Config.ARGB_8888
             )
+        }
+        // Handle smaller images with padding to minimum required dimension
+        var tempbitmap = bitmap
+        if (bitmap.width < fragmentWidth) {
+            tempbitmap = ImageUtils.padIfRequired(bitmap, fragmentWidth, fragmentHeight)
+            padLeft = bitmap.width
+            bitmapWidth = tempbitmap.width
+
+            if (bitmap.height < fragmentHeight) {
+                padTop = bitmap.height
+                bitmapHeight = tempbitmap.height
+            }
         }
 
         // Split bitmap to smaller fragments by iterating through grid (nRows * nCols) of bitmap cells
@@ -85,18 +101,18 @@ class BitmapFragments(
 
                 val w: Int = when {
                     (x == 0) -> 0
-                    (x == nCols - 1) -> (originalWidth - 1) - fragmentWidth
+                    (x == nCols - 1) -> (bitmapWidth - 1) - fragmentWidth
                     else -> x * strideX
                 }
 
                 val h: Int = when {
                     (y == 0) -> 0
-                    (y == nRows - 1) -> (originalHeight - 1) - fragmentHeight
+                    (y == nRows - 1) -> (bitmapHeight - 1) - fragmentHeight
                     else -> y * strideY
                 }
 
                 val fragment = Bitmap.createBitmap(
-                    bitmap,
+                    tempbitmap,
                     w, h,
                     fragmentWidth, fragmentHeight
                 )
@@ -107,7 +123,7 @@ class BitmapFragments(
             }
         }
 
-        bitmap.recycle()
+        tempbitmap.recycle()
     }
 
     /**
@@ -117,8 +133,8 @@ class BitmapFragments(
     fun patchFragments(): Bitmap {
 
         val bitmap = Bitmap.createBitmap(
-            originalWidth,
-            originalHeight,
+            bitmapWidth,
+            bitmapHeight,
             Bitmap.Config.ARGB_8888
         )
         val canvas = Canvas(bitmap)
@@ -130,13 +146,13 @@ class BitmapFragments(
 
                 val left: Int = when {
                     (x == 0) -> 0
-                    (x == nCols - 1) -> (originalWidth - 1) - fragmentWidth
+                    (x == nCols - 1) -> (bitmapWidth - 1) - fragmentWidth
                     else -> x * strideX
                 }
 
                 val top: Int = when {
                     (y == 0) -> 0
-                    (y == nRows - 1) -> (originalHeight - 1) - fragmentHeight
+                    (y == nRows - 1) -> (bitmapHeight - 1) - fragmentHeight
                     else -> y * strideY
                 }
 
@@ -157,7 +173,12 @@ class BitmapFragments(
             }
         }
 
-        return bitmap
+        val w: Int = if (padLeft <= 0) bitmap.width else padLeft - 1
+        val h: Int = if (padTop <= 0) bitmap.height else padTop - 1
+
+        val bmp = Bitmap.createBitmap(bitmap, 0, 0, w, h)
+
+        return bmp
     }
 
     operator fun get(key: Int): Bitmap {
