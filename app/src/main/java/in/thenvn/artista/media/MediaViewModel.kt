@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
+import android.view.View
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,10 +19,8 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
     override val coroutineContext: CoroutineContext
         get() = viewModelJob + Dispatchers.Main
 
+    // List fetched media from the user's gallery
     private val _mediaUriListLiveData = MutableLiveData<MutableList<Uri>>()
-    val mediaUriListLiveData: LiveData<MutableList<Uri>>
-        get() = _mediaUriListLiveData
-
     val mediaItemListLiveData: LiveData<List<MediaItem>>? =
         Transformations.map(_mediaUriListLiveData) { uriList ->
             uriList.map { uri ->
@@ -29,9 +28,15 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
             }
         }
 
-    init {
-        fetchAllMedia()
-    }
+    // Live data to track permission status
+    private val _permissionGrantedLiveData = MutableLiveData<Boolean>(false)
+    val permissionGrantedLiveData: LiveData<Boolean>
+        get() = _permissionGrantedLiveData
+    val permissionControlsVisibility: LiveData<Int> =
+        Transformations.map(_permissionGrantedLiveData) { isGranted ->
+            if (isGranted) View.GONE
+            else View.VISIBLE
+        }
 
     private fun loadMediaFromStorage(): MutableList<Uri> {
         val mediaList = mutableListOf<Uri>()
@@ -55,7 +60,11 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
         return mediaList
     }
 
-    private fun fetchAllMedia() {
+    fun updatePermissionGrantedStatus(isGranted: Boolean) {
+        _permissionGrantedLiveData.value = isGranted
+    }
+
+    fun fetchAllMedia() {
         launch(Dispatchers.Main) {
             _mediaUriListLiveData.value = withContext(Dispatchers.IO) {
                 loadMediaFromStorage()
