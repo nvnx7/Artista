@@ -20,6 +20,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.max
 import kotlin.math.round
 
 
@@ -221,23 +222,22 @@ abstract class ImageUtils {
         }
 
         /**
-         * Helper function to pad a bitmap at right and bottom edges so that to create a final
-         * bitmap of width [finalWidth] and height [finalHeight]
+         * Helper function to pad a bitmap at right and bottom edges if provided bitmap is smaller
+         * along corresponding dimensions than [finalWidth] and [finalHeight] respectively
          *
-         * @param bitmapIn Bitmap to be processed upon
-         * @param finalWidth Required final width of padded bitmap
-         * @param finalHeight Required final height of padded bitmap
-         *
+         * @param bitmap Bitmap to be processed upon
+         * @param finalWidth Final width of padded bitmap if original width was smaller
+         * @param finalHeight Final height of padded bitmap if original height was smaller
          * @return A new padded bitmap
          */
-        fun padBitmap(bitmapIn: Bitmap, finalWidth: Int, finalHeight: Int = finalWidth): Bitmap {
-            if (bitmapIn.width > finalWidth || bitmapIn.height > finalHeight) {
-                throw IllegalArgumentException("Provided bitmap dimensions should be less than final dimensions")
-            }
-            val paddedBitmap = Bitmap.createBitmap(finalWidth, finalHeight, Bitmap.Config.ARGB_8888)
+        fun padIfRequired(bitmap: Bitmap, finalWidth: Int, finalHeight: Int = finalWidth): Bitmap {
+            val w: Int = max(bitmap.width, finalWidth)
+            val h: Int = max(bitmap.height, finalHeight)
+
+            val paddedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(paddedBitmap)
             canvas.drawARGB(255, 255, 255, 255) // white background
-            canvas.drawBitmap(bitmapIn, 0F, 0F, null) // draw bitmap at top left
+            canvas.drawBitmap(bitmap, 0F, 0F, null) // draw bitmap at top left
             return paddedBitmap
         }
 
