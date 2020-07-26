@@ -1,5 +1,6 @@
 package `in`.thenvn.artista.utils
 
+import `in`.thenvn.artista.BuildConfig
 import `in`.thenvn.artista.R
 import android.content.ContentValues
 import android.content.Context
@@ -8,12 +9,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
+import androidx.core.content.FileProvider
 import androidx.core.graphics.ColorUtils
 import androidx.exifinterface.media.ExifInterface
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.round
@@ -22,6 +26,9 @@ import kotlin.math.round
 abstract class ImageUtils {
 
     companion object {
+
+        private const val TAG = "ImageUtils"
+
         /**
          * Helper function used to convert an EXIF orientation enum into a transformation matrix
          * that can be applied to a bitmap.
@@ -284,9 +291,32 @@ abstract class ImageUtils {
         }
 
         /**
+         * Create a temporary file to store a bitmap
+         *
+         * @param context Context to use to access directories
+         * @return Uri of the created file
+         */
+        fun createTemporaryFile(context: Context): Uri? {
+            val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+            Log.i(TAG, "createTemporaryFile: ${storageDir.toString()}")
+
+            return try {
+                val file = File.createTempFile("tmp", ".jpg", storageDir)
+                FileProvider.getUriForFile(
+                    context,
+                    "${BuildConfig.APPLICATION_ID}.fileprovider",
+                    file
+                )
+            } catch (ex: IOException) {
+                null
+            }
+        }
+
+        /**
          * Helper method to write the bitmap to the standard public Pictures directory
          * of the device.
          */
+        @Suppress("DEPRECATION")
         fun savePicture(context: Context, bitmap: Bitmap) {
             val dirName = context.resources.getString(R.string.app_name)
             val fileName = "${dirName}_${System.currentTimeMillis()}.jpg"
