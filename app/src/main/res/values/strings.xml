@@ -9,4 +9,5 @@
         edit and save after editing.</string>
     <string name="permission_rationale_setting">Storage permission is required to access photos you want to
         edit and save after editing. Please allow the permission in settings.</string>
+    <string name="error_small_dimension">Image dimension too small! Minimum 256 pixels required.</string>
 </resources>
