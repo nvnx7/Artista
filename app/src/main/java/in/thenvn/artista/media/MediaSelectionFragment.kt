@@ -73,7 +73,7 @@ class MediaSelectionFragment : Fragment() {
             // If media dimension is less than 255, do not proceed & show error message instead
             when {
                 (mediaItem.width in 1 until MIN_DIMENS || mediaItem.height in 1 until MIN_DIMENS) ||
-                        ImageUtils.validateMinimumDimension(
+                        !ImageUtils.validateMinimumDimension(
                             requireContext(),
                             mediaItem.uri,
                             MIN_DIMENS
