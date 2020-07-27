@@ -3,6 +3,7 @@ package `in`.thenvn.artista.editor
 import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
+import `in`.thenvn.artista.utils.ImageUtils
 import `in`.thenvn.artista.utils.setSrcUri
 import android.animation.Animator
 import android.animation.AnimatorInflater
@@ -41,9 +42,14 @@ class EditorFragment : Fragment() {
     private val photosResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) {
-                val style = Style(uri, Style.CUSTOM)
-                editorViewModel.addStyle(style)
-                applyStyle(style)
+                if (ImageUtils.validateMinimumDimension(requireContext(), uri, 256)) {
+                    val style = Style(uri, Style.CUSTOM)
+                    editorViewModel.addStyle(style)
+                    applyStyle(style)
+                } else Toast.makeText(
+                    context,
+                    resources.getString(R.string.error_small_dimension), Toast.LENGTH_LONG
+                ).show()
             } else Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
         }
 
@@ -63,7 +69,7 @@ class EditorFragment : Fragment() {
         arguments?.let { bundle ->
             val args = EditorFragmentArgs.fromBundle(bundle)
             uriString = args.mediaUri
-            Log.i(TAG, "Uri received: $uriString")
+
             val application = requireNotNull(activity).application
 
             val viewModelFactory = EditorViewModelFactory(Uri.parse(uriString), application)
