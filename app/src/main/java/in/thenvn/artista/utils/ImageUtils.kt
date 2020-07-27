@@ -353,5 +353,26 @@ abstract class ImageUtils {
                 out.close()
             }
         }
+
+        /**
+         * Checks if either dimension of the image is at least minDimension pixels
+         *
+         * @param context Context to use to access content resolver
+         * @param uri Uri of the media
+         * @param minDimension minimum dimension to check
+         * @return Boolean indicating whether either dimension is greater than minDimension
+         */
+        fun validateMinimumDimension(context: Context, uri: Uri, minDimension: Int): Boolean {
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            val inputStream = context.contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(inputStream, null, options)
+
+            val width = options.outWidth
+            val height = options.outHeight
+
+            if (width < minDimension || height < minDimension) return false
+
+            return true
+        }
     }
 }
