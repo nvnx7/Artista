@@ -37,12 +37,13 @@ class EditorFragment : Fragment() {
 
     companion object {
         private const val TAG = "EditorFragment"
+        private const val MIN_DIMENS = 256
     }
 
     private val photosResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) {
-                if (ImageUtils.validateMinimumDimension(requireContext(), uri, 256)) {
+                if (ImageUtils.validateMinimumDimension(requireContext(), uri, MIN_DIMENS)) {
                     val style = Style(uri, Style.CUSTOM)
                     editorViewModel.addStyle(style)
                     applyStyle(style)
@@ -50,7 +51,11 @@ class EditorFragment : Fragment() {
                     context,
                     resources.getString(R.string.error_small_dimension), Toast.LENGTH_LONG
                 ).show()
-            } else Toast.makeText(context, "Something went wrong!", Toast.LENGTH_SHORT).show()
+            } else Toast.makeText(
+                context,
+                resources.getString(R.string.error_unknown),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
     override fun onCreateView(
@@ -101,7 +106,6 @@ class EditorFragment : Fragment() {
             })
 
             editorViewModel.stylesListLiveData.observe(viewLifecycleOwner, Observer { styles ->
-                Log.i(TAG, "onCreateView: List changed, size ${styles.size}")
                 adapter.updateList(styles)
             })
 

@@ -27,6 +27,7 @@ class MediaSelectionFragment : Fragment() {
     companion object {
         private const val TAG = "MediaSelectionFragment"
         private const val PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE
+        private const val MIN_DIMENS = 256
     }
 
     private lateinit var capturedPicUri: Uri
@@ -71,11 +72,11 @@ class MediaSelectionFragment : Fragment() {
         val adapter = MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
             // If media dimension is less than 255, do not proceed & show error message instead
             when {
-                (mediaItem.width in 1..255 || mediaItem.height in 1..255) ||
+                (mediaItem.width in 1 until MIN_DIMENS || mediaItem.height in 1 until MIN_DIMENS) ||
                         ImageUtils.validateMinimumDimension(
                             requireContext(),
                             mediaItem.uri,
-                            256
+                            MIN_DIMENS
                         ) -> {
                     Toast.makeText(
                         requireContext(),
