@@ -68,19 +68,26 @@ class MediaSelectionFragment : Fragment() {
         checkPermissions()
 
         // Set up adapter and list of media
-        val adapter =
-            MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
-                // If media dimension is less than 255 AND greater than 0, do not proceed
-                // Dimension 0 indicates, that it is unknown
-                if (mediaItem.width in 1..255 || mediaItem.height in 1..255) {
+        val adapter = MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
+            // If media dimension is less than 255, do not proceed & show error message instead
+            when {
+                (mediaItem.width in 1..255 || mediaItem.height in 1..255) ||
+                        ImageUtils.validateMinimumDimension(
+                            requireContext(),
+                            mediaItem.uri,
+                            256
+                        ) -> {
                     Toast.makeText(
                         requireContext(),
-                        "Minimum image width and height must be 256 pixels!",
+                        resources.getString(R.string.error_small_dimension),
                         Toast.LENGTH_LONG
                     ).show()
-                } else navigateToEditor(mediaItem.uri.toString())
+                }
 
-            })
+                else -> navigateToEditor(mediaItem.uri.toString())
+            }
+
+        })
         val layoutManager = GridLayoutManager(activity, 3)
         binding.mediaGrid.layoutManager = layoutManager
         binding.mediaGrid.setHasFixedSize(true)
@@ -127,7 +134,6 @@ class MediaSelectionFragment : Fragment() {
 
             // Ask permission showing rationale without settings option
             shouldShowRequestPermissionRationale(PERMISSION_STORAGE) -> askPermission()
-
 
             // Try asking for permission
             else -> requestPermissionLauncher.launch(PERMISSION_STORAGE)
