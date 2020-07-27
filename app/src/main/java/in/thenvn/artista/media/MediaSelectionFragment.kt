@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -69,7 +70,16 @@ class MediaSelectionFragment : Fragment() {
         // Set up adapter and list of media
         val adapter =
             MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
-                navigateToEditor(mediaItem.uri.toString())
+                // If media dimension is less than 255 AND greater than 0, do not proceed
+                // Dimension 0 indicates, that it is unknown
+                if (mediaItem.width in 1..255 || mediaItem.height in 1..255) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Minimum image width and height must be 256 pixels!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else navigateToEditor(mediaItem.uri.toString())
+
             })
         val layoutManager = GridLayoutManager(activity, 3)
         binding.mediaGrid.layoutManager = layoutManager
@@ -81,7 +91,7 @@ class MediaSelectionFragment : Fragment() {
         binding.lifecycleOwner = this
 
         // Attach observers
-        mediaViewModel.mediaItemListLiveData?.observe(viewLifecycleOwner, Observer { mediaUriList ->
+        mediaViewModel.mediaItemsListLiveData.observe(viewLifecycleOwner, Observer { mediaUriList ->
             adapter.submitList(mediaUriList)
         })
         mediaViewModel.permissionGrantedLiveData.observe(viewLifecycleOwner, Observer { isGranted ->
@@ -97,13 +107,10 @@ class MediaSelectionFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        Log.i(TAG, "onResume: ")
         // If user possibly returns from settings after giving permissions update the status in
         // view model so that data is fetched
         if (PermissionUtils.isPermissionGranted(requireContext(), PERMISSION_STORAGE)) {
-            Log.i(TAG, "onResume: Permission granted")
             if (mediaViewModel.permissionGrantedLiveData.value == false) {
-                Log.i(TAG, "onResume: Updating status in view model")
                 mediaViewModel.updatePermissionGrantedStatus(true)
             }
         }
@@ -165,4 +172,5 @@ class MediaSelectionFragment : Fragment() {
         capturedPicUri = ImageUtils.createTemporaryFile(requireContext())!!
         cameraResultLauncher.launch(capturedPicUri)
     }
+
 }
