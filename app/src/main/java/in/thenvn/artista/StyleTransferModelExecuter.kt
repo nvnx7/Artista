@@ -10,15 +10,16 @@ import com.bumptech.glide.Glide
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.FileInputStream
+import java.io.IOException
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
-//TODO Check if gpu available
+class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean = true) {
+    //TODO Provide default blend ratio based on image resolution
     companion object {
-    private const val TAG = "StyleTransferModelExecutor"
-    private const val MAX_SIZE = 1024
-    private const val STYLE_IMAGE_SIZE = 256
+        private const val TAG = "StyleTransferModelExecutor"
+        private const val MAX_SIZE = 1440
+        private const val STYLE_IMAGE_SIZE = 256
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
         private const val OVERLAP_SIZE = 50
@@ -29,18 +30,30 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
     }
 
     private var gpuDelegate: GpuDelegate? = null
-    private var numberOfThreads = 4
+    private val numberOfThreads = 4
 
     private val interpreterPredict: Interpreter
     private val interpreterTransform: Interpreter
 
     init {
         if (useGPU) {
-            interpreterPredict = getInterpreter(context, STYLE_PREDICT_FLOAT16_MODEL, true)
-            interpreterTransform = getInterpreter(context, STYLE_TRANSFER_FLOAT16_MODEL, true)
+            interpreterPredict = getInterpreter(
+                context, STYLE_PREDICT_FLOAT16_MODEL,
+                STYLE_PREDICT_INT8_MODEL, useGPU
+            )
+            interpreterTransform = getInterpreter(
+                context, STYLE_TRANSFER_FLOAT16_MODEL,
+                STYLE_TRANSFER_INT8_MODEL, useGPU
+            )
         } else {
-            interpreterPredict = getInterpreter(context, STYLE_PREDICT_INT8_MODEL, false)
-            interpreterTransform = getInterpreter(context, STYLE_TRANSFER_INT8_MODEL, false)
+            interpreterPredict = getInterpreter(
+                context, STYLE_PREDICT_INT8_MODEL,
+                null, useGPU
+            )
+            interpreterTransform = getInterpreter(
+                context, STYLE_TRANSFER_INT8_MODEL,
+                null, useGPU
+            )
         }
     }
 
@@ -139,23 +152,42 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
             .get()
     }
 
+    @Throws(IOException::class)
     private fun getInterpreter(
         context: Context,
         modelName: String,
+        fallbackModelName: String?,
         useGPU: Boolean = true
     ): Interpreter {
-        val options = Interpreter.Options()
-        options.setNumThreads(numberOfThreads)
-
+        val options = Interpreter.Options().setNumThreads(numberOfThreads)
         gpuDelegate = null
+        var interpreter: Interpreter
+
         if (useGPU) {
             gpuDelegate = GpuDelegate()
             options.addDelegate(gpuDelegate)
+
+            // Try to load float16 model on GPU
+            try {
+                val model = loadModel(context, modelName)
+                interpreter = Interpreter(model, options)
+            } catch (ex: IllegalArgumentException) {
+                // If failed (OpenGL not found/supported), load quantized model on CPU
+                gpuDelegate = null
+                this.useGPU = false
+                val model = loadModel(context, fallbackModelName!!)
+                interpreter =
+                    Interpreter(model, Interpreter.Options().setNumThreads(numberOfThreads))
+            }
+        } else {
+            // Load quantized model on CPU
+            interpreter = Interpreter(loadModel(context, modelName), options)
         }
 
-        return Interpreter(loadModel(context, modelName), options)
+        return interpreter
     }
 
+    @Throws(IOException::class)
     private fun loadModel(context: Context, modelName: String): MappedByteBuffer {
         val fileDescriptor = context.assets.openFd(modelName)
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
@@ -165,6 +197,13 @@ class StyleTransferModelExecutor(context: Context, useGPU: Boolean = true) {
         val retFile = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
         fileDescriptor.close()
         return retFile
+    }
+
+    // Release the occupied resources
+    fun close() {
+        interpreterPredict.close()
+        interpreterTransform.close()
+        if (gpuDelegate != null) gpuDelegate!!.close()
     }
 
 }
