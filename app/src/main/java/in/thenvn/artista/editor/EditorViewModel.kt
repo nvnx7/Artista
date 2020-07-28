@@ -121,6 +121,7 @@ class EditorViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        styleTransferModelExecutor.close()
         viewModelScope.cancel()
     }
 }
