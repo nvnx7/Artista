@@ -13,7 +13,7 @@ import com.bumptech.glide.Glide
 fun ImageView.setSrcMedia(item: MediaItem) {
     Glide.with(context)
         .load(item.uri)
-        .override(400)
+        .override(200)
         .centerCrop()
         .into(this)
 }
@@ -29,7 +29,7 @@ fun ImageView.setSrcUri(uri: Uri) {
 fun ImageView.setSrcStyle(style: Style) {
     Glide.with(context)
         .load(style.uri)
-        .override(250)
+        .override(200)
         .centerCrop()
         .into(this)
 }
