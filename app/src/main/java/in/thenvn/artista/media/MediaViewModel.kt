@@ -5,11 +5,11 @@ import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
 import android.view.View
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
-import kotlinx.coroutines.*
+import androidx.lifecycle.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 class MediaViewModel(application: Application) : AndroidViewModel(application), CoroutineScope {
@@ -29,6 +29,7 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
     val permissionGrantedLiveData: LiveData<Boolean>
         get() = _permissionGrantedLiveData
 
+    // Live data to set visibility of empty view depending upon whether any media was found
     val visibilityEmptyView: LiveData<Int> =
         Transformations.map(_mediaItemsListLiveData) { mediaList ->
             when {
@@ -37,6 +38,10 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
             }
         }
 
+    /**
+     * Load all image media (uri, width & height) from device through content resolver
+     * @return List of MediaItem objects
+     */
     private fun loadMediaFromStorage(): MutableList<MediaItem> {
         val mediaList = mutableListOf<MediaItem>()
 
@@ -67,15 +72,21 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
         return mediaList
     }
 
+    /**
+     * Update the permission status
+     * @param isGranted Boolean which is true if permission granted
+     */
     fun updatePermissionGrantedStatus(isGranted: Boolean) {
         _permissionGrantedLiveData.value = isGranted
     }
 
+    /**
+     * Start fetching all media in a coroutine
+     */
     fun fetchAllMedia() {
-        launch(Dispatchers.Main) {
-            _mediaItemsListLiveData.value = withContext(Dispatchers.IO) {
-                loadMediaFromStorage()
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            val mediaList = loadMediaFromStorage()
+            _mediaItemsListLiveData.postValue(mediaList)
         }
     }
 
