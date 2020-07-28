@@ -141,6 +141,39 @@ abstract class ImageUtils {
             return inputImage
         }
 
+        fun bitmapToByteBuffer(
+            bitmap: Bitmap,
+            buffer: ByteBuffer,
+            mean: Float = 0.0F,
+            std: Float = 255.0F
+        ) {
+            val width = bitmap.width
+            val height = bitmap.height
+
+            if ((width * height * 3 * 4) != buffer.capacity())
+                throw java.lang.IllegalArgumentException("Capacity not same as bitmap size!")
+
+
+            val intValues = IntArray(width * height)
+            bitmap.getPixels(intValues, 0, width, 0, 0, width, height)
+//            buffer.rewind()
+            buffer.clear()
+
+            var pixel = 0
+            for (y in 0 until height) {
+                for (x in 0 until width) {
+                    val value = intValues[pixel++]
+
+                    // Normalize channel values to [-1.0, 1.0]. This requirement varies by
+                    // model. For example, some models might require values to be normalized
+                    // to the range [0.0, 1.0] instead.
+                    buffer.putFloat(((value shr 16 and 0xFF) - mean) / std)
+                    buffer.putFloat(((value shr 8 and 0xFF) - mean) / std)
+                    buffer.putFloat(((value and 0xFF) - mean) / std)
+                }
+            }
+        }
+
 //        fun blendBitmaps(
 //            bitmap1: Bitmap, bitmap2: Bitmap,
 //            mean: Float = 0.0F, std: Float = 255.0F,
