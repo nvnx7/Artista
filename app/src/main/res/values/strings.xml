@@ -11,4 +11,5 @@
         edit and save after editing. Please allow the permission in settings.</string>
     <string name="error_small_dimension">Image dimension too small! Minimum 256 pixels required.</string>
     <string name="error_unknown">Something went wrong!</string>
+    <string name="message_no_media">No Images Found</string>
 </resources>
