@@ -4,9 +4,11 @@ import android.app.Application
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
+import android.view.View
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
@@ -26,6 +28,14 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
     private val _permissionGrantedLiveData = MutableLiveData<Boolean>(false)
     val permissionGrantedLiveData: LiveData<Boolean>
         get() = _permissionGrantedLiveData
+
+    val visibilityEmptyView: LiveData<Int> =
+        Transformations.map(_mediaItemsListLiveData) { mediaList ->
+            when {
+                mediaList == null || mediaList.isEmpty() -> View.VISIBLE
+                else -> View.GONE
+            }
+        }
 
     private fun loadMediaFromStorage(): MutableList<MediaItem> {
         val mediaList = mutableListOf<MediaItem>()
