@@ -11,6 +11,8 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.FileInputStream
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
@@ -34,6 +36,10 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
     private val interpreterPredict: Interpreter
     private val interpreterTransform: Interpreter
 
+    // Buffers to reuse to store style bytes & content bytes
+    private val styleBuffer: ByteBuffer
+    private val contentBuffer: ByteBuffer
+
     init {
         if (useGPU) {
             interpreterPredict = getInterpreter(
@@ -54,6 +60,17 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
                 null, useGPU
             )
         }
+
+        styleBuffer = ByteBuffer.allocateDirect(STYLE_IMAGE_SIZE * STYLE_IMAGE_SIZE * 3 * 4).apply {
+            order(ByteOrder.nativeOrder())
+            rewind()
+        }
+
+        contentBuffer =
+            ByteBuffer.allocateDirect(1 * CONTENT_IMAGE_SIZE * CONTENT_IMAGE_SIZE * 3 * 4).apply {
+                order(ByteOrder.nativeOrder())
+                rewind()
+            }
     }
 
     /**
@@ -76,9 +93,9 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         try {
             // Extract the style bottleneck from style bitmap
             val styleBitmap = preProcessStyle(context, style)
-            val styleArray = ImageUtils.bitmapToByteBuffer(styleBitmap)
+            ImageUtils.bitmapToByteBuffer(styleBitmap, styleBuffer)
 
-            val inputsForPredict = arrayOf(styleArray)
+            val inputsForPredict = arrayOf(styleBuffer)
             val outputsForPredict = HashMap<Int, Any>()
             val styleBottleneck = Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
             outputsForPredict[0] = styleBottleneck
@@ -86,11 +103,11 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
 
             // Extract the style bottleneck from content bitmap
             val contentStyleBitmap = preProcessStyle(context, Style(contentImageUri, Style.CUSTOM))
-            val contentStyleArray = ImageUtils.bitmapToByteBuffer(contentStyleBitmap)
+            ImageUtils.bitmapToByteBuffer(contentStyleBitmap, styleBuffer)
 
             val contentStyleBottleneck =
                 Array(1) { Array(1) { Array(1) { FloatArray(BOTTLENECK_SIZE) } } }
-            inputsForPredict[0] = contentStyleArray
+            inputsForPredict[0] = styleBuffer
             outputsForPredict[0] = contentStyleBottleneck
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
 
@@ -108,8 +125,9 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
             contentBitmap.recycle()
 
             for (i in 0 until bitmapFragments.numberOfFragments) {
-                val contentArray = ImageUtils.bitmapToByteBuffer(bitmapFragments[i])
-                val inputForStyleTransfer = arrayOf(contentArray, styleBottleneckBlended)
+                ImageUtils.bitmapToByteBuffer(bitmapFragments[i], contentBuffer)
+
+                val inputForStyleTransfer = arrayOf(contentBuffer, styleBottleneckBlended)
                 val outputForStyleTransfer = HashMap<Int, Any>()
                 val outputImage =
                     Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
