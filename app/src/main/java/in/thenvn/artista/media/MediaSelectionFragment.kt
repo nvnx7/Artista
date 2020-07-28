@@ -40,7 +40,7 @@ class MediaSelectionFragment : Fragment() {
 
     private val cameraResultLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) {
-            if (it) navigateToEditor(capturedPicUri.toString())
+            if (it) navigateToEditor(capturedPicUri.toString()) // Proceed only if image was captured
         }
 
     private val requestPermissionLauncher =

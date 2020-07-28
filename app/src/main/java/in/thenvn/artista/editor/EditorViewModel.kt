@@ -57,16 +57,18 @@ class EditorViewModel(
     val processBusyLiveData: LiveData<Boolean>
         get() = _processBusyLiveData
 
+    // Helper class for executing inference tasks
     private lateinit var styleTransferModelExecutor: StyleTransferModelExecutor
+
     private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     init {
         _progressLiveData.value = -1
         _processBusyLiveData.value = true
-
         _progressMessageLiveData.value =
             application.resources.getString(R.string.message_loading_model)
 
+        // Load the already provided styles from the assets
         _stylesListLiveData.value = ArrayList()
         application.assets!!.list("styles")!!.forEach {
             _stylesListLiveData.value!!.add(
@@ -74,6 +76,7 @@ class EditorViewModel(
             )
         }
 
+        // Load the models from files
         viewModelScope.launch(inferenceThread) {
             styleTransferModelExecutor = StyleTransferModelExecutor(application.applicationContext)
             _processBusyLiveData.postValue(false)
@@ -82,6 +85,9 @@ class EditorViewModel(
         }
     }
 
+    /**
+     * Start process of styling the bitmap with given resources
+     */
     fun applyStyle(
         context: Context,
         contentImageUri: Uri,
@@ -102,16 +108,25 @@ class EditorViewModel(
         }
     }
 
+    /**
+     * Update current blend ratio
+     */
     fun updateBlendRatio(ratio: Float) {
         _blendRatio = ratio
     }
 
+    /**
+     * Add a style to the list of styles shown at index 1
+     */
     fun addStyle(style: Style) {
         val newList: ArrayList<Style> = _stylesListLiveData.value!!
         newList.add(1, style)
         _stylesListLiveData.value = newList
     }
 
+    /**
+     * Save styled bitmap result to device storage
+     */
     fun saveStyledBitmap() {
         _styledBitmapLiveData.value?.let {
             ImageUtils.savePicture(getApplication(), _styledBitmapLiveData.value!!)

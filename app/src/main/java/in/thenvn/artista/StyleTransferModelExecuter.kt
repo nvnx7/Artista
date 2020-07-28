@@ -15,7 +15,6 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
 class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean = true) {
-    //TODO Provide default blend ratio based on image resolution
     companion object {
         private const val TAG = "StyleTransferModelExecutor"
         private const val MAX_SIZE = 1440
@@ -57,6 +56,16 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         }
     }
 
+    /**
+     * Start the inference using the models
+     *
+     * @param context Context to use to load resources
+     * @param contentImageUri Uri of content image
+     * @param style Style object corresponding to style image
+     * @param blendRatio Ratio to use for blending styles of content image & style image
+     * @param postProgress Lambda function to be called with progress of inference process
+     * @return The final styled bitmap result
+     */
     fun execute(
         context: Context,
         contentImageUri: Uri,
@@ -127,6 +136,14 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         }
     }
 
+    /**
+     * Blend the styles of the content image and the style image
+     *
+     * @param styleBottleneck Array representing style of style image
+     * @param contentStyleBottleneck Array representing style of style image
+     * @param blendRatio Ratio of much style of style image to use
+     * @return Array representing blended styles
+     */
     private fun blendStyles(
         styleBottleneck: Array<Array<Array<FloatArray>>>,
         contentStyleBottleneck: Array<Array<Array<FloatArray>>>,
@@ -142,6 +159,13 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         return blendedStyle
     }
 
+    /**
+     * Load & pre-process the style image file so to make it suitable to be fed into model
+     *
+     * @param context Context to load style bitmap from
+     * @param style Style object corresponding to the style image
+     * @return Pre processed bitmap
+     */
     private fun preProcessStyle(context: Context, style: Style): Bitmap {
         return Glide.with(context)
             .asBitmap()
@@ -152,6 +176,16 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
             .get()
     }
 
+    /**
+     * Get the interpreter object corresponding to a model
+     *
+     * @param context context to access model files
+     * @param modelName File name of model
+     * @param fallbackModelName File name of model to load on CPU, in case loading modelName
+     * on GPU fails
+     * @param useGPU Whether to use gpu device (if available) for inference with interpreter
+     *@return Interpreter object to use later to make inferences
+     */
     @Throws(IOException::class)
     private fun getInterpreter(
         context: Context,
@@ -187,6 +221,14 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         return interpreter
     }
 
+    /**
+     * Load the tf lite model
+     *
+     * @param context Context to access models files from
+     * @param modelName File name of the model
+     *
+     * @return Mapped byte buffer of the model
+     */
     @Throws(IOException::class)
     private fun loadModel(context: Context, modelName: String): MappedByteBuffer {
         val fileDescriptor = context.assets.openFd(modelName)
@@ -199,7 +241,9 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         return retFile
     }
 
-    // Release the occupied resources
+    /**
+     * Release the occupied resources
+     */
     fun close() {
         interpreterPredict.close()
         interpreterTransform.close()

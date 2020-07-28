@@ -43,6 +43,7 @@ class EditorFragment : Fragment() {
     private val photosResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) {
+                // Proceed only if minimum dimension is at least 256 pixels else show error toast
                 if (ImageUtils.validateMinimumDimension(requireContext(), uri, MIN_DIMENS)) {
                     val style = Style(uri, Style.CUSTOM)
                     editorViewModel.addStyle(style)
@@ -77,34 +78,35 @@ class EditorFragment : Fragment() {
 
             val application = requireNotNull(activity).application
 
+            // Load view model
             val viewModelFactory = EditorViewModelFactory(Uri.parse(uriString), application)
             editorViewModel =
                 ViewModelProvider(this, viewModelFactory).get(EditorViewModel::class.java)
             binding.editorViewModel = editorViewModel
 
+            // Set up the list with adapter
             adapter = StylesAdapter(
                 StylesAdapter.StyleClickListener(
                     { style -> applyStyle(style) },
-                    { openPhotosActivity() }
-                )
+                    { openPhotosActivity() })
             )
-
             val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             binding.stylesList.layoutManager = layoutManager
             val space = resources.getDimensionPixelSize(R.dimen.item_space)
             binding.stylesList.addItemDecoration(ListSpaceItemDecoration(space))
-
             binding.stylesList.adapter = adapter
+
             binding.lifecycleOwner = this
 
+            // Load animators for showing/hiding progress views
             loadAnimators(binding.progressHolder)
 
+            // Attach observers
             editorViewModel.processBusyLiveData.observe(viewLifecycleOwner, Observer {
                 isBusy = it
                 if (isBusy) fadeInAnimator.start()
                 else fadeOutAnimator.start()
             })
-
             editorViewModel.stylesListLiveData.observe(viewLifecycleOwner, Observer { styles ->
                 adapter.updateList(styles)
             })
@@ -112,6 +114,7 @@ class EditorFragment : Fragment() {
             // Set initial preview as the original image itself
             binding.preview.setSrcUri(Uri.parse(uriString))
 
+            // Set listeners
             binding.controls.blendingSeekBar.setOnSeekBarChangeListener(object :
                 SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(
