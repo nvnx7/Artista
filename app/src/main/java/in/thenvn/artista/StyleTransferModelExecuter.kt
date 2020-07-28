@@ -129,7 +129,7 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
                 postProgress(progress)
             }
 
-            return bitmapFragments.patchFragments()
+            return bitmapFragments.patchFragments().also { bitmapFragments.recycle() }
         } catch (e: Exception) {
             Log.d(TAG, "Error in inference pipeline: ${e.message}")
             return ImageUtils.createEmptyBitmap(CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE)

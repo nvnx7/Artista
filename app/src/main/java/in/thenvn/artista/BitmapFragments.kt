@@ -181,6 +181,15 @@ class BitmapFragments(
         return bmp
     }
 
+    /**
+     * Recycle all the stored bitmap fragments
+     */
+    fun recycle() {
+        fragments.forEach { bitmap ->
+            bitmap.recycle()
+        }
+    }
+
     operator fun get(key: Int): Bitmap {
         if (key >= fragments.size) {
             throw IndexOutOfBoundsException("Index $key out of bounds for size ${fragments.size}")
