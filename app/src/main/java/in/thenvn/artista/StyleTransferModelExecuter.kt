@@ -23,7 +23,7 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
         private const val STYLE_IMAGE_SIZE = 256
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
-        private const val OVERLAP_SIZE = 50
+        private const val OVERLAP_SIZE = 40
         private const val STYLE_PREDICT_INT8_MODEL = "style_predict_quantized_256.tflite"
         private const val STYLE_TRANSFER_INT8_MODEL = "style_transfer_quantized_384.tflite"
         private const val STYLE_PREDICT_FLOAT16_MODEL = "style_predict_f16_256.tflite"
@@ -114,40 +114,55 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
             val styleBottleneckBlended =
                 blendStyles(styleBottleneck, contentStyleBottleneck, blendRatio)
 
-            // Perform style transfer on content image
-            val contentBitmap = ImageUtils.loadScaledBitmap(context, contentImageUri, MAX_SIZE)
+            // Initialize decoder to decode bitmap piece by piece
+            val decoder = ContentImageDecoder(
+                context,
+                contentImageUri,
+                CONTENT_IMAGE_SIZE,
+                CONTENT_IMAGE_SIZE,
+                OVERLAP_SIZE
+            )
+            val iterator = decoder.iterator()
 
-            val bitmapFragments = BitmapFragments(
-                contentBitmap,
+            // Initialize builder to patch styled pieces
+            val builder = BitmapBuilder(
+                decoder.width, decoder.height,
                 CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE,
                 OVERLAP_SIZE
             )
-            contentBitmap.recycle()
 
-            for (i in 0 until bitmapFragments.numberOfFragments) {
-                ImageUtils.bitmapToByteBuffer(bitmapFragments[i], contentBuffer)
+            // Initialize input for interpreter, note that contentBuffer reference is rewritten in
+            // the loop, every iteration of loaded bitmap piece
+            val inputForStyleTransfer = arrayOf(contentBuffer, styleBottleneckBlended)
 
-                val inputForStyleTransfer = arrayOf(contentBuffer, styleBottleneckBlended)
-                val outputForStyleTransfer = HashMap<Int, Any>()
-                val outputImage =
-                    Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
-                outputForStyleTransfer[0] = outputImage
+            // Initialize the output array of appropriate size
+            val outputForStyleTransfer = HashMap<Int, Any>()
+            val outputImage =
+                Array(1) { Array(CONTENT_IMAGE_SIZE) { Array(CONTENT_IMAGE_SIZE) { FloatArray(3) } } }
+            outputForStyleTransfer[0] = outputImage
 
+            var i = 1
+            while (iterator.hasNext()) {
+                // Load bitmap piece from decoder & write to content buffer
+                ImageUtils.bitmapToByteBuffer(iterator.next(), contentBuffer)
+
+                // Perform inference & write output to outputImage array
                 interpreterTransform.runForMultipleInputsOutputs(
                     inputForStyleTransfer,
                     outputForStyleTransfer
                 )
 
-                val styledFragment =
-                    ImageUtils.convertArrayToBitmap(outputImage, CONTENT_IMAGE_SIZE)
+                // Convert the array to bitmap and put the piece at appropriate position
+                builder.convertAndPut(outputImage)
 
-                bitmapFragments[i] = styledFragment
-
-                val progress = (i + 1) * 100 / bitmapFragments.numberOfFragments
+                // Post current progress of the process
+                val progress = i * 100 / builder.numberOfPieces
                 postProgress(progress)
+                i++
             }
+            decoder.recycle()
 
-            return bitmapFragments.patchFragments().also { bitmapFragments.recycle() }
+            return builder.bitmap
         } catch (e: Exception) {
             Log.d(TAG, "Error in inference pipeline: ${e.message}")
             return ImageUtils.createEmptyBitmap(CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE)
