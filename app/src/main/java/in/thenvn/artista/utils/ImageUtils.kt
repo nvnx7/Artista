@@ -21,7 +21,9 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 
 abstract class ImageUtils {
@@ -219,14 +221,31 @@ abstract class ImageUtils {
         fun convertArrayToBitmap(
             imageArray: Array<Array<Array<FloatArray>>>,
             imageWidth: Int,
-            imageHeight: Int = imageWidth
+            imageHeight: Int,
+            overlapOffset: Int,
+            fadeLeft: Boolean,
+            fadeTop: Boolean
         ): Bitmap {
-            val conf = Bitmap.Config.ARGB_8888
-            val bitmap = Bitmap.createBitmap(imageWidth, imageHeight, conf)
+            val dAlpha: Int = (255F / overlapOffset).roundToInt()
+            val bitmap = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.ARGB_8888)
 
+            var alphaL: Int = -dAlpha
             for (x in imageArray[0].indices) {
+                if (fadeLeft) alphaL += dAlpha
+                else alphaL = 255
+
+                var alphaT: Int = -dAlpha
                 for (y in imageArray[0][0].indices) {
-                    val color = Color.rgb(
+                    if (fadeTop) alphaT += dAlpha
+                    else alphaT = 255
+
+                    val alpha: Int = if (x < overlapOffset && y < overlapOffset) min(alphaL, alphaT)
+                    else if (x >= overlapOffset && y < overlapOffset) alphaT
+                    else if (x < overlapOffset && y >= overlapOffset) alphaL
+                    else 255
+
+                    val color = Color.argb(
+                        alpha,
                         ((imageArray[0][x][y][0] * 255).toInt()),
                         ((imageArray[0][x][y][1] * 255).toInt()),
                         (imageArray[0][x][y][2] * 255).toInt()
@@ -245,13 +264,16 @@ abstract class ImageUtils {
         }
 
         fun loadScaledBitmap(context: Context, uri: Uri, maxSize: Int): Bitmap {
+//            var bitmap: Bitmap
+
             return Glide
                 .with(context)
                 .asBitmap()
                 .load(uri)
-                .apply(RequestOptions().override(maxSize).fitCenter())
+                .apply(RequestOptions().override(maxSize).centerInside())
                 .submit()
                 .get()
+
         }
 
         /**
@@ -268,9 +290,10 @@ abstract class ImageUtils {
             val h: Int = max(bitmap.height, finalHeight)
 
             val paddedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(paddedBitmap)
-            canvas.drawARGB(255, 255, 255, 255) // white background
+            var canvas: Canvas? = Canvas(paddedBitmap)
+            canvas!!.drawARGB(255, 255, 255, 255) // white background
             canvas.drawBitmap(bitmap, 0F, 0F, null) // draw bitmap at top left
+            canvas = null
             return paddedBitmap
         }
 
