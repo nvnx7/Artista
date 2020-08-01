@@ -3,8 +3,8 @@
 
     <string name="description_target_image">target image</string>
     <string name="label_style_blend_seek_bar">STYLE BLEND</string>
-    <string name="message_loading_model">Preparing the Artist…</string>
-    <string name="message_performing_inference">Painting your Art…</string>
+    <string name="message_loading_model">Preparing the Artist</string>
+    <string name="message_performing_inference">Painting your Art</string>
     <string name="permission_rationale">Storage permission is required to access photos you want to
         edit and save after editing.</string>
     <string name="permission_rationale_setting">Storage permission is required to access photos you want to
@@ -12,4 +12,5 @@
     <string name="error_small_dimension">Image dimension too small! Minimum 256 pixels required.</string>
     <string name="error_unknown">Something went wrong!</string>
     <string name="message_no_media">No Images Found</string>
+    <string name="error_dimensions_large_difference">Image\'s smaller dimension is much smaller than it\'s larger dimension!</string>
 </resources>
