@@ -126,7 +126,7 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
 
             // Initialize builder to patch styled pieces
             val builder = BitmapBuilder(
-                decoder.width, decoder.height,
+                decoder.originalWidth, decoder.originalHeight,
                 CONTENT_IMAGE_SIZE, CONTENT_IMAGE_SIZE,
                 OVERLAP_SIZE
             )
