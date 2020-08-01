@@ -27,16 +27,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.min
 
 class MediaSelectionFragment : Fragment() {
 
     companion object {
         private const val TAG = "MediaSelectionFragment"
         private const val PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE
-        private const val MIN_DIMENS = 256
-        private const val MAX_DIMENS = 1280
     }
+
+    private var minDimens: Int = 0
+    private var maxDimens: Int = 0
 
     private lateinit var capturedPicUri: Uri
     private lateinit var mediaViewModel: MediaViewModel
@@ -79,6 +82,9 @@ class MediaSelectionFragment : Fragment() {
 
         requireNotNull(activity as AppCompatActivity).supportActionBar?.show()
 
+        minDimens = resources.getInteger(R.integer.min_size_content)
+        maxDimens = resources.getInteger(R.integer.max_size_content)
+
         mediaViewModel = ViewModelProvider(this).get(MediaViewModel::class.java)
 
         binding.mediaViewModel = mediaViewModel
@@ -96,7 +102,7 @@ class MediaSelectionFragment : Fragment() {
             else ImageUtils.getImageSizeFromUri(requireContext(), mediaItem.uri)
 
             when {
-                (size.width < MIN_DIMENS || size.height < MIN_DIMENS) -> {
+                (size.width < minDimens || size.height < minDimens) -> {
                     Toast.makeText(
                         requireContext(),
                         resources.getString(R.string.error_small_dimension),
@@ -111,7 +117,8 @@ class MediaSelectionFragment : Fragment() {
         val layoutManager = GridLayoutManager(activity, 3)
         binding.mediaGrid.layoutManager = layoutManager
         binding.mediaGrid.setHasFixedSize(true)
-        val spacing = resources.getDimensionPixelSize(R.dimen.grid_space)
+        val spacing = resources.getDimensionPixelSize(R.dimen.item_space_media)
+
         binding.mediaGrid.addItemDecoration(GridSpaceItemDecoration(spacing, 3))
         binding.mediaGrid.adapter = adapter
 
@@ -184,11 +191,23 @@ class MediaSelectionFragment : Fragment() {
     }
 
     private fun navigateToEditor(uriString: String) {
+        val r: Float = maxDimens / max(size.width, size.height).toFloat()
+
+        // If scaled bitmap's dimension will be too small show error
+        if (ceil(min(size.width, size.height) * r).toInt() < minDimens) {
+            Toast.makeText(
+                requireContext(),
+                resources.getString(R.string.error_dimensions_large_difference),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
         var uri: String? = uriString
         MainScope().launch(Dispatchers.IO) {
             // If original size too large, first save a temporary scaled down version at uri
-            if (max(size.width, size.height) > MAX_DIMENS) {
-                uri = loadAndSaveScaledBitmap(uriString)
+            if (max(size.width, size.height) > maxDimens) {
+                uri = loadAndSaveScaledBitmap(uriString, r)
             }
 
             withContext(Dispatchers.Main) {
@@ -216,18 +235,16 @@ class MediaSelectionFragment : Fragment() {
         cameraResultLauncher.launch(capturedPicUri)
     }
 
-    private fun loadAndSaveScaledBitmap(uriString: String): String? {
-        val r: Float = MAX_DIMENS / max(size.width, size.height).toFloat()
-
+    private fun loadAndSaveScaledBitmap(uriString: String, r: Float): String? {
         val bitmap = ImageUtils.loadScaledBitmap(
             requireContext(), Uri.parse(uriString),
             size.width, size.height, r
         )
-        val uri = ImageUtils.createTemporaryUri(requireContext())
+        val uri = ImageUtils.createTemporaryUri(requireContext(), ".png")
 
         if (uri != null) {
             val out = requireContext().contentResolver.openOutputStream(uri)
-            bitmap?.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            bitmap?.compress(Bitmap.CompressFormat.PNG, 90, out)
             out!!.close()
         }
 

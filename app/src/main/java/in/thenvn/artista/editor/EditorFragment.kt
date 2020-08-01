@@ -11,7 +11,6 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,9 +34,10 @@ class EditorFragment : Fragment() {
 
     private var isBusy: Boolean = false
 
+    private var minDimensStyle: Int = 0
+
     companion object {
         private const val TAG = "EditorFragment"
-        private const val MIN_DIMENS = 256
     }
 
     private val photosResultLauncher =
@@ -69,6 +69,7 @@ class EditorFragment : Fragment() {
         )
 
         requireNotNull(activity as AppCompatActivity).supportActionBar?.hide()
+        minDimensStyle = resources.getInteger(R.integer.min_size_style)
 
         var uriString: String?
 
@@ -92,7 +93,7 @@ class EditorFragment : Fragment() {
             )
             val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             binding.stylesList.layoutManager = layoutManager
-            val space = resources.getDimensionPixelSize(R.dimen.item_space)
+            val space = resources.getDimensionPixelSize(R.dimen.item_space_style)
             binding.stylesList.addItemDecoration(ListSpaceItemDecoration(space))
             binding.stylesList.adapter = adapter
 
@@ -137,7 +138,6 @@ class EditorFragment : Fragment() {
         if (isBusy) return
 
         adapter.showAsSelection(style)
-        Log.i(TAG, "applyStyle trigger")
         editorViewModel.applyStyle(
             requireContext(),
             editorViewModel.originalMediaUri,
@@ -152,7 +152,7 @@ class EditorFragment : Fragment() {
 
     private fun validateDimensions(uri: Uri): Boolean {
         val size = ImageUtils.getImageSizeFromUri(requireContext(), uri)
-        return size.width >= MIN_DIMENS && size.height >= MIN_DIMENS
+        return size.width >= minDimensStyle && size.height >= minDimensStyle
     }
 
     private fun loadAnimators(targetView: View) {
