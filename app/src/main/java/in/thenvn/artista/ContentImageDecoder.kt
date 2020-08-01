@@ -57,27 +57,32 @@ class ContentImageDecoder(
     /**
      * Original image's width & height
      */
-    val width: Int
-    val height: Int
+    val originalWidth: Int
+    val originalHeight: Int
+
+    private val temp: Bitmap = Bitmap.createBitmap(pieceWidth, pieceHeight, Bitmap.Config.ARGB_8888)
 
     init {
         if (overlapOffset > pieceWidth || overlapOffset > pieceHeight)
             throw IllegalArgumentException("Overlap offset must be less than chunk dimensions!")
 
-        //TODO Handel smaller images
+        //TODO Handle smaller images
 
         // Initialize decoder with input stream
         val inputStream = context.contentResolver.openInputStream(uri)
         decoder = BitmapRegionDecoder.newInstance(inputStream, true)
         inputStream?.close()
 
-        width = decoder.width
-        height = decoder.height
+        originalWidth = decoder.width
+        originalHeight = decoder.height
 
-        nCols = ceil((width - overlapOffset).toFloat() / (strideX)).toInt()
-        nRows = ceil((height - overlapOffset).toFloat() / (strideY)).toInt()
+        nCols = ceil((originalWidth - overlapOffset).toFloat() / (strideX)).toInt()
+        nRows = ceil((originalHeight - overlapOffset).toFloat() / (strideY)).toInt()
 
-        options = BitmapFactory.Options().apply { inSampleSize = 1 }
+        options = BitmapFactory.Options().apply {
+            inSampleSize = 1
+            inBitmap = temp
+        }
     }
 
     /**
@@ -114,13 +119,13 @@ class ContentImageDecoder(
         override fun next(): Bitmap {
             val left: Int = when {
                 (col == 0) -> 0
-                (col == nCols - 1) -> (width - 1) - pieceWidth
+                (col == nCols - 1) -> (originalWidth - 1) - pieceWidth
                 else -> col * strideX
             }
 
             val top: Int = when {
                 (row == 0) -> 0
-                (row == nRows - 1) -> (height - 1) - pieceHeight
+                (row == nRows - 1) -> (originalHeight - 1) - pieceHeight
                 else -> row * strideY
             }
 
