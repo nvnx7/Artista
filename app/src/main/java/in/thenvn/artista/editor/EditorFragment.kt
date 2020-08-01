@@ -44,7 +44,7 @@ class EditorFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) {
                 // Proceed only if minimum dimension is at least 256 pixels else show error toast
-                if (ImageUtils.validateMinimumDimension(requireContext(), uri, MIN_DIMENS)) {
+                if (validateDimensions(uri)) {
                     val style = Style(uri, Style.CUSTOM)
                     editorViewModel.addStyle(style)
                     applyStyle(style)
@@ -148,6 +148,11 @@ class EditorFragment : Fragment() {
     private fun openPhotosActivity() {
         if (isBusy) return
         photosResultLauncher.launch("image/*")
+    }
+
+    private fun validateDimensions(uri: Uri): Boolean {
+        val size = ImageUtils.getImageSizeFromUri(requireContext(), uri)
+        return size.width >= MIN_DIMENS && size.height >= MIN_DIMENS
     }
 
     private fun loadAnimators(targetView: View) {
