@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="min_size_content">384</integer>
+    <integer name="max_size_content">1280</integer>
+    <integer name="min_size_style">256</integer>
+</resources>
