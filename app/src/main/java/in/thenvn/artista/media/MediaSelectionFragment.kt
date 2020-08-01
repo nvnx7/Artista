@@ -6,9 +6,11 @@ import `in`.thenvn.artista.databinding.FragmentMediaSelectionBinding
 import `in`.thenvn.artista.utils.ImageUtils
 import `in`.thenvn.artista.utils.PermissionUtils
 import android.Manifest
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +23,11 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.math.max
 
 class MediaSelectionFragment : Fragment() {
 
@@ -28,19 +35,30 @@ class MediaSelectionFragment : Fragment() {
         private const val TAG = "MediaSelectionFragment"
         private const val PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE
         private const val MIN_DIMENS = 256
+        private const val MAX_DIMENS = 1280
     }
 
     private lateinit var capturedPicUri: Uri
     private lateinit var mediaViewModel: MediaViewModel
 
+    // Dimensions size of chosen media
+    private var size: Size = Size(0, 0)
+
     private val photosResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let { navigateToEditor(uri.toString()) }
+            uri?.let {
+                size = ImageUtils.getImageSizeFromUri(requireContext(), uri)
+                navigateToEditor(uri.toString())
+            }
         }
 
     private val cameraResultLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) {
-            if (it) navigateToEditor(capturedPicUri.toString()) // Proceed only if image was captured
+            if (it) {
+                // Proceed only if image was captured
+                size = ImageUtils.getImageSizeFromUri(requireContext(), capturedPicUri)
+                navigateToEditor(capturedPicUri.toString())
+            }
         }
 
     private val requestPermissionLauncher =
@@ -70,14 +88,15 @@ class MediaSelectionFragment : Fragment() {
 
         // Set up adapter and list of media
         val adapter = MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
-            // If media dimension is less than 255, do not proceed & show error message instead
+            // If media dimension is less than 256, do not proceed & show error message instead
+            size = if (mediaItem.width > 0 && mediaItem.height > 0) Size(
+                mediaItem.width,
+                mediaItem.height
+            )
+            else ImageUtils.getImageSizeFromUri(requireContext(), mediaItem.uri)
+
             when {
-                (mediaItem.width in 1 until MIN_DIMENS || mediaItem.height in 1 until MIN_DIMENS) ||
-                        !ImageUtils.validateMinimumDimension(
-                            requireContext(),
-                            mediaItem.uri,
-                            MIN_DIMENS
-                        ) -> {
+                (size.width < MIN_DIMENS || size.height < MIN_DIMENS) -> {
                     Toast.makeText(
                         requireContext(),
                         resources.getString(R.string.error_small_dimension),
@@ -165,10 +184,27 @@ class MediaSelectionFragment : Fragment() {
     }
 
     private fun navigateToEditor(uriString: String) {
-        val action = MediaSelectionFragmentDirections
-            .actionMediaSelectionFragmentToEditorFragment(uriString)
+        var uri: String? = uriString
+        MainScope().launch(Dispatchers.IO) {
+            // If original size too large, first save a temporary scaled down version at uri
+            if (max(size.width, size.height) > MAX_DIMENS) {
+                uri = loadAndSaveScaledBitmap(uriString)
+            }
 
-        findNavController().navigate(action)
+            withContext(Dispatchers.Main) {
+                if (uri == null) {
+                    Toast.makeText(
+                        requireContext(), resources.getString(R.string.error_unknown),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    val action = MediaSelectionFragmentDirections
+                        .actionMediaSelectionFragmentToEditorFragment(uri.toString())
+
+                    findNavController().navigate(action)
+                }
+            }
+        }
     }
 
     private fun openPhotosActivity() {
@@ -176,8 +212,28 @@ class MediaSelectionFragment : Fragment() {
     }
 
     private fun launchCamera() {
-        capturedPicUri = ImageUtils.createTemporaryFile(requireContext())!!
+        capturedPicUri = ImageUtils.createTemporaryUri(requireContext())!!
         cameraResultLauncher.launch(capturedPicUri)
+    }
+
+    private fun loadAndSaveScaledBitmap(uriString: String): String? {
+        val r: Float = MAX_DIMENS / max(size.width, size.height).toFloat()
+
+        val bitmap = ImageUtils.loadScaledBitmap(
+            requireContext(), Uri.parse(uriString),
+            size.width, size.height, r
+        )
+        val uri = ImageUtils.createTemporaryUri(requireContext())
+
+        if (uri != null) {
+            val out = requireContext().contentResolver.openOutputStream(uri)
+            bitmap?.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            out!!.close()
+        }
+
+        bitmap?.recycle()
+
+        return uri.toString()
     }
 
 }
