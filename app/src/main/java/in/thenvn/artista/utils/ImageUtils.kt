@@ -10,20 +10,17 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import androidx.core.content.FileProvider
 import androidx.core.graphics.ColorUtils
 import androidx.exifinterface.media.ExifInterface
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.round
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 
 abstract class ImageUtils {
@@ -158,7 +155,7 @@ abstract class ImageUtils {
 
             val intValues = IntArray(width * height)
             bitmap.getPixels(intValues, 0, width, 0, 0, width, height)
-//            buffer.rewind()
+
             buffer.clear()
 
             var pixel = 0
@@ -263,17 +260,50 @@ abstract class ImageUtils {
             return bitmap
         }
 
-        fun loadScaledBitmap(context: Context, uri: Uri, maxSize: Int): Bitmap {
-//            var bitmap: Bitmap
+        fun loadScaledBitmap(
+            context: Context,
+            uri: Uri,
+            originalWidth: Int,
+            originalHeight: Int,
+            r: Float
+        ): Bitmap? {
+            val targetWidth: Int = ceil(originalWidth * r).toInt()
+            val targetHeight: Int = ceil(originalHeight * r).toInt()
 
-            return Glide
-                .with(context)
-                .asBitmap()
-                .load(uri)
-                .apply(RequestOptions().override(maxSize).centerInside())
-                .submit()
-                .get()
+            val sampleSize: Int =
+                max(originalWidth, originalHeight) / max(targetWidth, targetHeight)
+            var inputStream = context.contentResolver.openInputStream(uri)
 
+            val exif = ExifInterface(inputStream!!)
+            val transformation =
+                decodeExifOrientation(
+                    exif.getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_ROTATE_90
+                    )
+                )
+            inputStream.close()
+
+            val opts = BitmapFactory.Options().apply {
+                inScaled = true
+                inSampleSize = sampleSize
+                inDensity = max(originalWidth, originalHeight)
+                inTargetDensity = max(targetWidth, targetHeight) * sampleSize
+                inMutable = false
+            }
+
+            inputStream = context.contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(inputStream, null, opts)
+            inputStream?.close()
+            return Bitmap.createBitmap(
+                bitmap!!,
+                0,
+                0,
+                bitmap.width,
+                bitmap.height,
+                transformation,
+                true
+            )
         }
 
         /**
@@ -352,7 +382,7 @@ abstract class ImageUtils {
          * @param context Context to use to access directories
          * @return Uri of the created file
          */
-        fun createTemporaryFile(context: Context): Uri? {
+        fun createTemporaryUri(context: Context): Uri? {
             val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
             Log.i(TAG, "createTemporaryFile: ${storageDir.toString()}")
 
@@ -411,24 +441,18 @@ abstract class ImageUtils {
         }
 
         /**
-         * Checks if either dimension of the image is at least minDimension pixels
+         * Query the dimensions of the image at given uri
          *
          * @param context Context to use to access content resolver
          * @param uri Uri of the media
-         * @param minDimension minimum dimension to check
-         * @return Boolean indicating whether either dimension is greater than minDimension
+         * @return Size object representing size of media
          */
-        fun validateMinimumDimension(context: Context, uri: Uri, minDimension: Int): Boolean {
+        fun getImageSizeFromUri(context: Context, uri: Uri): Size {
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             val inputStream = context.contentResolver.openInputStream(uri)
             BitmapFactory.decodeStream(inputStream, null, options)
-
-            val width = options.outWidth
-            val height = options.outHeight
-
-            if (width < minDimension || height < minDimension) return false
-
-            return true
+            inputStream?.close()
+            return Size(options.outWidth, options.outHeight)
         }
     }
 }
