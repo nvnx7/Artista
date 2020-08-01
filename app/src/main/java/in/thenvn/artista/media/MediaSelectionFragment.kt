@@ -9,7 +9,6 @@ import android.Manifest
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
@@ -74,7 +73,6 @@ class MediaSelectionFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        Log.i(TAG, "onCreateView: ")
         // Inflate the layout for this fragment
         val binding: FragmentMediaSelectionBinding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_media_selection, container, false
@@ -101,19 +99,9 @@ class MediaSelectionFragment : Fragment() {
             )
             else ImageUtils.getImageSizeFromUri(requireContext(), mediaItem.uri)
 
-            when {
-                (size.width < minDimens || size.height < minDimens) -> {
-                    Toast.makeText(
-                        requireContext(),
-                        resources.getString(R.string.error_small_dimension),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-                else -> navigateToEditor(mediaItem.uri.toString())
-            }
-
+            navigateToEditor(mediaItem.uri.toString())
         })
+
         val layoutManager = GridLayoutManager(activity, 3)
         binding.mediaGrid.layoutManager = layoutManager
         binding.mediaGrid.setHasFixedSize(true)
@@ -191,6 +179,16 @@ class MediaSelectionFragment : Fragment() {
     }
 
     private fun navigateToEditor(uriString: String) {
+        // If original bitmap's dimension is too small show error
+        if (min(size.width, size.height) < minDimens) {
+            Toast.makeText(
+                requireContext(),
+                resources.getString(R.string.error_small_dimension, minDimens),
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
         val r: Float = maxDimens / max(size.width, size.height).toFloat()
 
         // If scaled bitmap's dimension will be too small show error
@@ -235,6 +233,14 @@ class MediaSelectionFragment : Fragment() {
         cameraResultLauncher.launch(capturedPicUri)
     }
 
+    /**
+     * Loads a scaled version of image scaled by factor [r] at uri [uriString]
+     * and saves it temporarily
+     *
+     * @param uriString String value of original image's uri
+     * @param r Factor by which to scale
+     * @return Uri string of temporary scaled image file
+     */
     private fun loadAndSaveScaledBitmap(uriString: String, r: Float): String? {
         val bitmap = ImageUtils.loadScaledBitmap(
             requireContext(), Uri.parse(uriString),

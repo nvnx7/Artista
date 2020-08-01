@@ -50,7 +50,8 @@ class EditorFragment : Fragment() {
                     applyStyle(style)
                 } else Toast.makeText(
                     context,
-                    resources.getString(R.string.error_small_dimension), Toast.LENGTH_LONG
+                    resources.getString(R.string.error_small_dimension, minDimensStyle),
+                    Toast.LENGTH_LONG
                 ).show()
             } else Toast.makeText(
                 context,
