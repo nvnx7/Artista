@@ -8,7 +8,7 @@ import androidx.appcompat.widget.AppCompatImageView
  * Custom image view that makes the drawable width to be same as the view regardless of
  * height of drawable, while also maintaining aspect ratio of drawable.
  */
-class FillWidthImageView @JvmOverloads constructor(
+class FullWidthImageView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
