@@ -58,7 +58,8 @@ class EditorViewModel(
         get() = _processBusyLiveData
 
     // Helper class for executing inference tasks
-    private lateinit var styleTransferModelExecutor: StyleTransferModelExecutor
+    private val styleTransferModelExecutor =
+        StyleTransferModelExecutor(application.applicationContext)
 
     private val inferenceThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
@@ -78,7 +79,7 @@ class EditorViewModel(
 
         // Load the models from files
         viewModelScope.launch(inferenceThread) {
-            styleTransferModelExecutor = StyleTransferModelExecutor(application.applicationContext)
+            styleTransferModelExecutor.load()
             _processBusyLiveData.postValue(false)
             _progressLiveData.postValue(0)
             Log.i(TAG, "Executor created ")
