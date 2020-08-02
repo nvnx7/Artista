@@ -129,6 +129,7 @@ class EditorViewModel(
      * Save styled bitmap result to device storage
      */
     fun saveStyledBitmap() {
+        if (_processBusyLiveData.value == true) return
         _styledBitmapLiveData.value?.let {
             ImageUtils.savePicture(getApplication(), _styledBitmapLiveData.value!!)
             Toast.makeText(getApplication(), "Art Saved!", Toast.LENGTH_SHORT).show()
