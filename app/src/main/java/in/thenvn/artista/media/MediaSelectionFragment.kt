@@ -27,8 +27,13 @@ class MediaSelectionFragment : Fragment() {
         private const val PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE
     }
 
+    // Uri of captured pic from camera
     private lateinit var capturedPicUri: Uri
+
     private lateinit var mediaViewModel: MediaViewModel
+
+    // If view model is already busy
+    private var isBusy: Boolean = false
 
     private val photosResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -71,8 +76,7 @@ class MediaSelectionFragment : Fragment() {
 
         // Set up adapter and list of media
         val adapter = MediaItemsAdapter(MediaItemsAdapter.MediaItemClickListener { mediaItem ->
-            // If media dimension is less than 256, do not proceed & show error message instead
-            mediaViewModel.updateSelectedMediaItem(mediaItem)
+            if (!isBusy) mediaViewModel.updateSelectedMediaItem(mediaItem)
         })
 
         val layoutManager = GridLayoutManager(activity, 3)
@@ -95,6 +99,7 @@ class MediaSelectionFragment : Fragment() {
         mediaViewModel.mediaItemUriLiveData.observe(viewLifecycleOwner, Observer { uri ->
             uri?.let { navigateToEditor(uri) }
         })
+        mediaViewModel.isBusy.observe(viewLifecycleOwner, Observer { busy -> isBusy = busy })
 
         // Set click listeners
         binding.photosButton.setOnClickListener { openPhotosActivity() }
@@ -170,10 +175,12 @@ class MediaSelectionFragment : Fragment() {
     }
 
     private fun openPhotosActivity() {
+        if (isBusy) return
         photosResultLauncher.launch("image/*")
     }
 
     private fun launchCamera() {
+        if (isBusy) return
         capturedPicUri = ImageUtils.createTemporaryUri(requireContext())!!
         cameraResultLauncher.launch(capturedPicUri)
     }

@@ -41,19 +41,30 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
     val permissionGrantedLiveData: LiveData<Boolean>
         get() = _permissionGrantedLiveData
 
-    // Live data to set visibility of empty view depending upon whether any media was found
-    val visibilityEmptyView: LiveData<Int> =
-        Transformations.map(_mediaItemsListLiveData) { mediaList ->
-            when {
-                mediaList == null || mediaList.isEmpty() -> View.VISIBLE
-                else -> View.GONE
-            }
-        }
-
     // Live data set to a non-null Uri which will be used to extract bitmap in editor
     private val _mediaItemUriLiveData = MutableLiveData<Uri?>(null)
     val mediaItemUriLiveData: LiveData<Uri?>
         get() = _mediaItemUriLiveData
+
+    // Live data to determine if any process is underway
+    private val _isBusy = MutableLiveData<Boolean>(false)
+    val isBusy: LiveData<Boolean>
+        get() = _isBusy
+    val visibilityProgressView: LiveData<Int> =
+        Transformations.map(_isBusy) { busy ->
+            if (busy) View.VISIBLE else View.GONE
+        }
+
+    // Live data to set visibility of empty view depending upon whether any media was found
+    val visibilityEmptyView = MediatorLiveData<Int>().apply {
+        addSource(_isBusy) { busy ->
+            if (busy) value = View.GONE
+        }
+
+        addSource(_mediaItemsListLiveData) { list ->
+            value = if (list.isNullOrEmpty()) View.VISIBLE else View.GONE
+        }
+    }
 
     // Min & max dimensions of content image
     private val minDimens: Int
@@ -76,9 +87,11 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
      * Start fetching all media in a coroutine
      */
     fun fetchAllMedia() {
+        _isBusy.value = true
         viewModelScope.launch(Dispatchers.IO) {
             val mediaList = loadMediaFromStorage()
             _mediaItemsListLiveData.postValue(mediaList)
+            _isBusy.postValue(false)
         }
     }
 
@@ -120,9 +133,11 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
         if (max(size.width, size.height) <= maxDimens)
             _mediaItemUriLiveData.value = mediaItem.uri
         else {
+            _isBusy.value = true
             viewModelScope.launch(Dispatchers.IO) {
                 val uri = loadAndSaveScaledBitmap(mediaItem.uri, size.width, size.height, r)
                 _mediaItemUriLiveData.postValue(uri)
+                _isBusy.postValue(false)
             }
         }
     }
