@@ -136,6 +136,7 @@ class EditorViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        _styledBitmapLiveData.value?.recycle()
         styleTransferModelExecutor.close()
         viewModelScope.cancel()
     }
