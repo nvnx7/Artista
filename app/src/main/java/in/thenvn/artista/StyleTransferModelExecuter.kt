@@ -16,10 +16,9 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean = true) {
+class StyleTransferModelExecutor(private val context: Context, private var useGPU: Boolean = true) {
     companion object {
         private const val TAG = "StyleTransferModelExecutor"
-        private const val MAX_SIZE = 1440
         private const val STYLE_IMAGE_SIZE = 256
         private const val CONTENT_IMAGE_SIZE = 384
         private const val BOTTLENECK_SIZE = 100
@@ -33,14 +32,17 @@ class StyleTransferModelExecutor(context: Context, private var useGPU: Boolean =
     private var gpuDelegate: GpuDelegate? = null
     private val numberOfThreads = 4
 
-    private val interpreterPredict: Interpreter
-    private val interpreterTransform: Interpreter
+    private lateinit var interpreterPredict: Interpreter
+    private lateinit var interpreterTransform: Interpreter
 
     // Buffers to reuse to store style bytes & content bytes
-    private val styleBuffer: ByteBuffer
-    private val contentBuffer: ByteBuffer
+    private lateinit var styleBuffer: ByteBuffer
+    private lateinit var contentBuffer: ByteBuffer
 
-    init {
+    /**
+     * Loads the interpreters and allocate the buffers into the memory
+     */
+    fun load() {
         if (useGPU) {
             interpreterPredict = getInterpreter(
                 context, STYLE_PREDICT_FLOAT16_MODEL,
