@@ -79,7 +79,8 @@ class MediaSelectionFragment : Fragment() {
             if (!isBusy) mediaViewModel.updateSelectedMediaItem(mediaItem)
         })
 
-        val layoutManager = GridLayoutManager(activity, 3)
+        val layoutManager =
+            GridLayoutManager(activity, resources.getInteger(R.integer.span_count_media_grid))
         binding.mediaGrid.layoutManager = layoutManager
         binding.mediaGrid.setHasFixedSize(true)
         val spacing = resources.getDimensionPixelSize(R.dimen.item_space_media)

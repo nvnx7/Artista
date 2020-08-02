@@ -92,7 +92,10 @@ class EditorFragment : Fragment() {
                     { style -> applyStyle(style) },
                     { openPhotosActivity() })
             )
-            val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            val layoutManager = LinearLayoutManager(
+                context,
+                resources.getInteger(R.integer.orientation_styles_list), false
+            )
             binding.stylesList.layoutManager = layoutManager
             val space = resources.getDimensionPixelSize(R.dimen.item_space_style)
             binding.stylesList.addItemDecoration(ListSpaceItemDecoration(space))
