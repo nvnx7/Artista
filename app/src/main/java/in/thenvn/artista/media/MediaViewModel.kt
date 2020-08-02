@@ -142,7 +142,7 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
     private fun loadMediaFromStorage(): MutableList<MediaItem> {
         val mediaList = mutableListOf<MediaItem>()
 
-        val contentResolver = getApplication<Application>().applicationContext.contentResolver
+        val contentResolver = applicationContext.contentResolver
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.WIDTH,
@@ -186,17 +186,13 @@ class MediaViewModel(application: Application) : AndroidViewModel(application), 
         r: Float
     ): Uri? {
         val bitmap = ImageUtils.loadScaledBitmap(
-            getApplication<Application>().applicationContext, uri,
+            applicationContext, uri,
             originalWidth, originalHeight, r
         )
-        val tempUri =
-            ImageUtils.createTemporaryUri(getApplication<Application>().applicationContext, ".png")
+        val tempUri = ImageUtils.createTemporaryUri(applicationContext, ".png")
 
         if (tempUri != null) {
-            val out =
-                getApplication<Application>().applicationContext.contentResolver.openOutputStream(
-                    tempUri
-                )
+            val out = applicationContext.contentResolver.openOutputStream(tempUri)
             bitmap?.compress(Bitmap.CompressFormat.PNG, 90, out)
             out!!.close()
         }
