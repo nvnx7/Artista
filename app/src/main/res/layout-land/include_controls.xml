@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -18,7 +19,6 @@
             android:id="@+id/textView2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:labelFor="@+id/blending_seek_bar"
             android:text="@string/label_style_blend_seek_bar"
             android:textAlignment="center"
@@ -32,14 +32,25 @@
             style="@android:style/Widget.Material.SeekBar.Discrete"
             android:layout_width="164dp"
             android:layout_height="184dp"
-            android:layout_marginTop="16dp"
-            android:max="10"
-            android:progress="5"
+            android:max="20"
+            android:progress="10"
             android:rotation="270"
             android:tickMark="@null"
             app:layout_constraintEnd_toEndOf="@+id/floatingActionButton"
             app:layout_constraintStart_toStartOf="@+id/floatingActionButton"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/blend_percent" />
+
+        <TextView
+            android:id="@+id/blend_percent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@{editorViewModel.blendPercent}"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+            app:layout_constraintEnd_toEndOf="@+id/blending_seek_bar"
+            app:layout_constraintStart_toStartOf="@+id/blending_seek_bar"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="50%" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floatingActionButton"

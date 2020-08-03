@@ -14,6 +14,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
+import kotlin.math.roundToInt
 
 class EditorViewModel(
     private val _originalMediaUri: Uri,
@@ -36,7 +37,12 @@ class EditorViewModel(
     val styledBitmapLiveData: LiveData<Bitmap>
         get() = _styledBitmapLiveData
 
+    // Style blend ratio
     private var _blendRatio: Float = 0.5F
+
+    private val _blendPercent = MutableLiveData<String>("50%")
+    val blendPercent: LiveData<String>
+        get() = _blendPercent
 
     // List of style images
     private val _stylesListLiveData = MutableLiveData<ArrayList<Style>>()
@@ -118,6 +124,7 @@ class EditorViewModel(
      */
     fun updateBlendRatio(ratio: Float) {
         _blendRatio = ratio
+        _blendPercent.value = "${(ratio * 100).roundToInt()}%"
     }
 
     /**
