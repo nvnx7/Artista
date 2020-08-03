@@ -116,6 +116,9 @@ class EditorFragment : Fragment() {
             editorViewModel.stylesListLiveData.observe(viewLifecycleOwner, Observer { styles ->
                 adapter.updateList(styles)
             })
+            editorViewModel.currentStyleLiveData.observe(viewLifecycleOwner, Observer { style ->
+                style?.let { adapter.showAsSelection(style) }
+            })
 
             // Set initial preview as the original image itself. Set only if there is no styled
             // bitmap available, as if any styled bitmap is available it will be set automatically
@@ -145,7 +148,7 @@ class EditorFragment : Fragment() {
     private fun applyStyle(style: Style) {
         if (isBusy) return
 
-        adapter.showAsSelection(style)
+        editorViewModel.currentStyleLiveData.value = style
         editorViewModel.applyStyle(
             requireContext(),
             editorViewModel.originalMediaUri,

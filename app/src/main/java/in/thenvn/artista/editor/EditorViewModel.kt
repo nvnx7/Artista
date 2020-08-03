@@ -24,8 +24,12 @@ class EditorViewModel(
         private const val TAG = "EditorViewModel"
     }
 
+    // Backing property for selected media's uri
     val originalMediaUri: Uri
         get() = _originalMediaUri
+
+    // Live data to hold currently selected style
+    val currentStyleLiveData = MutableLiveData<Style>()
 
     // Final result bitmap of applying style to original image
     private val _styledBitmapLiveData = MutableLiveData<Bitmap>()
