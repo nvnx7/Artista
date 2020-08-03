@@ -2,4 +2,5 @@
 <resources>
     <dimen name="item_space_media">4dp</dimen>
     <dimen name="item_space_style">2dp</dimen>
+    <dimen name="size_list_item_style">120dp</dimen>
 </resources>

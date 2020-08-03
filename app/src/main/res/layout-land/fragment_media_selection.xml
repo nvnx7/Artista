@@ -37,7 +37,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/photos_button"
-            app:srcCompat="@android:drawable/ic_menu_camera" />
+            app:srcCompat="@drawable/ic_camera" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/photos_button"
@@ -51,7 +51,7 @@
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/camera_button"
-            app:srcCompat="@android:drawable/ic_menu_gallery" />
+            app:srcCompat="@drawable/ic_photo_library" />
 
         <TextView
             android:id="@+id/empty_view"

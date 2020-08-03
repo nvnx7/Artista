@@ -52,7 +52,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5"
             android:onClick="@{() -> editorViewModel.saveStyledBitmap()}"
-            app:srcCompat="@android:drawable/stat_sys_download" />
+            app:srcCompat="@drawable/ic_save" />
 
         <TextView
             android:id="@+id/blend_percent"

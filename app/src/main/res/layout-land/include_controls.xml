@@ -63,7 +63,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@android:drawable/stat_sys_download" />
+            app:srcCompat="@drawable/ic_save" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

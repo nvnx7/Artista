@@ -10,22 +10,33 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/size_list_item_style"
+        android:layout_height="@dimen/size_list_item_style"
+        android:background="?android:attr/selectableItemBackground"
         android:onClick="@{ () -> clickListener.onButtonClick() }">
 
         <TextView
             android:id="@+id/textView"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:background="@color/colorPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
             android:gravity="center"
-            android:text="CUSTOM"
+            android:text="@string/label_custom_style"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-            android:textColor="@android:color/white"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/imageView"
+            app:layout_constraintStart_toStartOf="@+id/imageView" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/description_choose_custom_style"
+            android:tint="@android:color/black"
+            app:layout_constraintBottom_toTopOf="@+id/textView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_photo_library" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
