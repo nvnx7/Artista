@@ -117,8 +117,11 @@ class EditorFragment : Fragment() {
                 adapter.updateList(styles)
             })
 
-            // Set initial preview as the original image itself
-            (binding.preview as ImageView).setSrcUri(Uri.parse(uriString))
+            // Set initial preview as the original image itself. Set only if there is no styled
+            // bitmap available, as if any styled bitmap is available it will be set automatically
+            // using live data
+            if (editorViewModel.styledBitmapLiveData.value == null)
+                (binding.preview as ImageView).setSrcUri(Uri.parse(uriString))
 
             // Set listeners
             binding.controls.blendingSeekBar.setOnSeekBarChangeListener(object :
