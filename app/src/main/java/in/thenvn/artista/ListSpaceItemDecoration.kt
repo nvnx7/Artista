@@ -12,7 +12,12 @@ class ListSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecorat
         parent: RecyclerView,
         state: RecyclerView.State
     ) {
-        outRect.left = space
-        outRect.right = space
+        if (parent.layoutManager?.canScrollVertically() == true) {
+            outRect.top = space
+            outRect.right = space
+        } else {
+            outRect.left = space
+            outRect.right = space
+        }
     }
 }
