@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -117,7 +118,7 @@ class EditorFragment : Fragment() {
             })
 
             // Set initial preview as the original image itself
-            binding.preview.setSrcUri(Uri.parse(uriString))
+            (binding.preview as ImageView).setSrcUri(Uri.parse(uriString))
 
             // Set listeners
             binding.controls.blendingSeekBar.setOnSeekBarChangeListener(object :
