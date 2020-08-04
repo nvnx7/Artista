@@ -16,4 +16,6 @@
     <string name="label_custom_style">Gallery</string>
     <string name="description_choose_custom_style">choose custom style</string>
     <string name="description_style_preview">style preview</string>
+    <string name="menu_title_about">About</string>
+    <string name="title_licenses_activity">Open Source Software Licenses</string>
 </resources>
