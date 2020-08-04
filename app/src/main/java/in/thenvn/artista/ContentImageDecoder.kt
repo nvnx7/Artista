@@ -10,8 +10,8 @@ import kotlin.math.ceil
 
 /**
  * Helper class to decode large bitmap piece by piece. Each piece is of size [pieceWidth] x [pieceHeight]
- * Each piece share [overlapOffset] number of columns with piece on its left (if present) & also
- * [overlapOffset] number of rows with piece on its top (if present). Overlap is done to obscure the
+ * Each piece share given overlapOffset number of columns with piece on its left (if present) & also
+ * overlapOffset number of rows with piece on its top (if present). Overlap is done to obscure the
  * seams formed when later the edited pieces are patched together.
  *
  * @param context Context to get content resolver from to load resources
@@ -41,9 +41,6 @@ class ContentImageDecoder(
     private val nCols: Int
     private val nRows: Int
 
-    val numberOfPieces: Int
-        get() = nCols * nRows
-
     /**
      * Decoder to decode bitmap piece by piece
      */
@@ -66,8 +63,6 @@ class ContentImageDecoder(
         if (overlapOffset > pieceWidth || overlapOffset > pieceHeight)
             throw IllegalArgumentException("Overlap offset must be less than chunk dimensions!")
 
-        //TODO Handle smaller images
-
         // Initialize decoder with input stream
         val inputStream = context.contentResolver.openInputStream(uri)
         decoder = BitmapRegionDecoder.newInstance(inputStream, true)
@@ -80,7 +75,6 @@ class ContentImageDecoder(
         nRows = ceil((originalHeight - overlapOffset).toFloat() / (strideY)).toInt()
 
         options = BitmapFactory.Options().apply {
-            inSampleSize = 1
             inBitmap = temp
         }
     }
@@ -142,4 +136,5 @@ class ContentImageDecoder(
         }
 
     }
+
 }
