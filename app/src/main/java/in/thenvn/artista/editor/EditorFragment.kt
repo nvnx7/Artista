@@ -46,7 +46,7 @@ class EditorFragment : Fragment() {
             if (uri != null) {
                 // Proceed only if minimum dimension is at least 256 pixels else show error toast
                 if (validateDimensions(uri)) {
-                    val style = Style(uri, Style.CUSTOM)
+                    val style = Style("Custom", uri, Style.CUSTOM)
                     editorViewModel.addStyle(style)
                     applyStyle(style)
                 } else Toast.makeText(

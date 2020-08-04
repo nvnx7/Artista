@@ -3,6 +3,7 @@ package `in`.thenvn.artista.editor
 import android.net.Uri
 
 data class Style(
+    val name: String,
     val uri: Uri,
     val type: Int,
     var selected: Boolean = false

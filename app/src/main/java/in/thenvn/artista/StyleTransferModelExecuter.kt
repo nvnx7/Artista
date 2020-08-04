@@ -104,7 +104,8 @@ class StyleTransferModelExecutor(private val context: Context, private var useGP
             interpreterPredict.runForMultipleInputsOutputs(inputsForPredict, outputsForPredict)
 
             // Extract the style bottleneck from content bitmap
-            val contentStyleBitmap = preProcessStyle(context, Style(contentImageUri, Style.CUSTOM))
+            val contentStyleBitmap =
+                preProcessStyle(context, Style("", contentImageUri, Style.CUSTOM))
             ImageUtils.bitmapToByteBuffer(contentStyleBitmap, styleBuffer)
 
             val contentStyleBottleneck =

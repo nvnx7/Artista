@@ -83,7 +83,7 @@ class EditorViewModel(
         _stylesListLiveData.value = ArrayList()
         application.assets!!.list("styles")!!.forEach {
             _stylesListLiveData.value!!.add(
-                Style(Uri.parse("file:///android_asset/styles/$it"), Style.FIXED)
+                Style(it.dropLast(4), Uri.parse("file:///android_asset/styles/$it"), Style.FIXED)
             )
         }
 

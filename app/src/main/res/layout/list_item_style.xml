@@ -37,5 +37,18 @@
             app:invisible="@{!style.selected}"
             app:srcCompat="@drawable/ic_check"
             tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/style_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:background="@color/transparentBlack"
+            android:padding="4dp"
+            android:text="@{style.name}"
+            android:textAlignment="center"
+            android:textColor="@color/colorPrimary"
+            android:textSize="12sp"
+            tools:text="Style Name" />
     </FrameLayout>
 </layout>
