@@ -4,23 +4,25 @@ import `in`.thenvn.artista.BuildConfig
 import `in`.thenvn.artista.R
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.util.Size
 import androidx.core.content.FileProvider
-import androidx.core.graphics.ColorUtils
 import androidx.exifinterface.media.ExifInterface
-import com.bumptech.glide.Glide
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import kotlin.math.*
+import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 
 abstract class ImageUtils {
@@ -61,85 +63,14 @@ abstract class ImageUtils {
         }
 
         /**
-         * Decode a bitmap from a file and apply the transformations described in its EXIF data
+         * Writes the given bitmap to byte buffer while also normalizing pixel values with given
+         * mean & standard deviation before writing value to buffer.
          *
-         * @param file - The image file to be read using [BitmapFactory.decodeFile]
+         * @param bitmap Bitmap to get pixel values from
+         * @param buffer Byte buffer to write to
+         * @param mean Mean for normalizing pixel value
+         * @param std Standard deviation for normalizing pixel value
          */
-        fun decodeBitmap(file: File): Bitmap {
-            val exif = ExifInterface(file.absolutePath)
-            val transformation =
-                decodeExifOrientation(
-                    exif.getAttributeInt(
-                        ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_ROTATE_90
-                    )
-                )
-
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-
-            return Bitmap.createBitmap(
-                BitmapFactory.decodeFile(file.absolutePath), 0, 0,
-                bitmap.width, bitmap.height,
-                transformation,
-                true
-            )
-        }
-
-        fun decodeBitmap(context: Context, imageUri: Uri): Bitmap {
-            val stream = context.contentResolver.openInputStream(imageUri)
-            val exif = ExifInterface(stream!!)
-            //TODO Wrong orientation is received
-            val transformation =
-                decodeExifOrientation(
-                    exif.getAttributeInt(
-                        ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_ROTATE_90
-                    )
-                )
-
-            val bitmap = Glide.with(context).asBitmap().load(imageUri).submit().get()
-
-//            return Bitmap.createBitmap(
-//                Glide.with(context).asBitmap().load(imageUri).submit().get(), 0, 0,
-//                bitmap.width, bitmap.height,
-//                transformation,
-//                true
-//            )
-            return bitmap
-        }
-
-        fun bitmapToByteBuffer(
-            bitmap: Bitmap,
-            mean: Float = 0.0F,
-            std: Float = 255.0F
-        ): ByteBuffer {
-
-            val width = bitmap.width
-            val height = bitmap.height
-
-            val inputImage = ByteBuffer.allocateDirect(1 * width * height * 3 * 4)
-            inputImage.order(ByteOrder.nativeOrder())
-            inputImage.rewind()
-
-            val intValues = IntArray(width * height)
-            bitmap.getPixels(intValues, 0, width, 0, 0, width, height)
-            var pixel = 0
-
-            for (y in 0 until height) {
-                for (x in 0 until width) {
-                    val value = intValues[pixel++]
-
-                    // Normalize channel values to [-1.0, 1.0]. This requirement varies by
-                    // model. For example, some models might require values to be normalized
-                    // to the range [0.0, 1.0] instead.
-                    inputImage.putFloat(((value shr 16 and 0xFF) - mean) / std)
-                    inputImage.putFloat(((value shr 8 and 0xFF) - mean) / std)
-                    inputImage.putFloat(((value and 0xFF) - mean) / std)
-                }
-            }
-
-            inputImage.rewind()
-            return inputImage
-        }
-
         fun bitmapToByteBuffer(
             bitmap: Bitmap,
             buffer: ByteBuffer,
@@ -254,12 +185,30 @@ abstract class ImageUtils {
             return bitmap
         }
 
+        /**
+         * Creates a dummy bitmap
+         *
+         * @param width Width of created bitmap
+         * @param height Height of created bitmap
+         * @param color Color of bitmap
+         * @return Created bitmap
+         */
         fun createEmptyBitmap(width: Int, height: Int = width, color: Int = 0): Bitmap {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
             if (color != 0) bitmap.eraseColor(color)
             return bitmap
         }
 
+        /**
+         * Loads a bitmap efficiently from the given uri scaled by some given factor.
+         *
+         * @param context Context to access content resolver from
+         * @param uri Content uri of the image on device
+         * @param originalWidth Original width of the image
+         * @param originalHeight Original height of the image
+         * @param r Factor by which the original dimensions are scaled
+         * @return Scaled bitmap
+         */
         fun loadScaledBitmap(
             context: Context,
             uri: Uri,
@@ -304,27 +253,6 @@ abstract class ImageUtils {
                 transformation,
                 true
             )
-        }
-
-        /**
-         * Helper function to pad a bitmap at right and bottom edges if provided bitmap is smaller
-         * along corresponding dimensions than [finalWidth] and [finalHeight] respectively
-         *
-         * @param bitmap Bitmap to be processed upon
-         * @param finalWidth Final width of padded bitmap if original width was smaller
-         * @param finalHeight Final height of padded bitmap if original height was smaller
-         * @return A new padded bitmap
-         */
-        fun padIfRequired(bitmap: Bitmap, finalWidth: Int, finalHeight: Int = finalWidth): Bitmap {
-            val w: Int = max(bitmap.width, finalWidth)
-            val h: Int = max(bitmap.height, finalHeight)
-
-            val paddedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            var canvas: Canvas? = Canvas(paddedBitmap)
-            canvas!!.drawARGB(255, 255, 255, 255) // white background
-            canvas.drawBitmap(bitmap, 0F, 0F, null) // draw bitmap at top left
-            canvas = null
-            return paddedBitmap
         }
 
         /**
@@ -387,7 +315,7 @@ abstract class ImageUtils {
             Log.i(TAG, "createTemporaryFile: ${storageDir.toString()}")
 
             return try {
-                val file = File.createTempFile("tmp", ".jpg", storageDir)
+                val file = File.createTempFile("tmp", suffix, storageDir)
                 FileProvider.getUriForFile(
                     context,
                     "${BuildConfig.APPLICATION_ID}.fileprovider",
