@@ -1,7 +1,7 @@
 package `in`.thenvn.artista.editor
 
-import `in`.thenvn.artista.ListSpaceItemDecoration
 import `in`.thenvn.artista.R
+import `in`.thenvn.artista.custom.ListSpaceItemDecoration
 import `in`.thenvn.artista.databinding.FragmentEditorBinding
 import `in`.thenvn.artista.utils.ImageUtils
 import `in`.thenvn.artista.utils.setSrcUri
@@ -99,7 +99,11 @@ class EditorFragment : Fragment() {
             )
             binding.stylesList.layoutManager = layoutManager
             val space = resources.getDimensionPixelSize(R.dimen.item_space_style)
-            binding.stylesList.addItemDecoration(ListSpaceItemDecoration(space))
+            binding.stylesList.addItemDecoration(
+                ListSpaceItemDecoration(
+                    space
+                )
+            )
             binding.stylesList.adapter = adapter
 
             binding.lifecycleOwner = this

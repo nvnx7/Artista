@@ -1,4 +1,4 @@
-package `in`.thenvn.artista
+package `in`.thenvn.artista.custom
 
 import android.graphics.Rect
 import android.view.View

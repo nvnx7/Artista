@@ -1,7 +1,7 @@
 package `in`.thenvn.artista.media
 
-import `in`.thenvn.artista.GridSpaceItemDecoration
 import `in`.thenvn.artista.R
+import `in`.thenvn.artista.custom.GridSpaceItemDecoration
 import `in`.thenvn.artista.databinding.FragmentMediaSelectionBinding
 import `in`.thenvn.artista.utils.ImageUtils
 import `in`.thenvn.artista.utils.PermissionUtils
@@ -85,7 +85,12 @@ class MediaSelectionFragment : Fragment() {
         binding.mediaGrid.setHasFixedSize(true)
         val spacing = resources.getDimensionPixelSize(R.dimen.item_space_media)
 
-        binding.mediaGrid.addItemDecoration(GridSpaceItemDecoration(spacing, 3))
+        binding.mediaGrid.addItemDecoration(
+            GridSpaceItemDecoration(
+                spacing,
+                3
+            )
+        )
         binding.mediaGrid.adapter = adapter
 
         binding.lifecycleOwner = this
