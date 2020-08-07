@@ -9,7 +9,7 @@ android {
     compileSdkVersion 29
 
     defaultConfig {
-        applicationId "in.thenvn.artista"
+        applicationId "com.naveeen.artista"
         minSdkVersion 24
         targetSdkVersion 29
         versionCode 1

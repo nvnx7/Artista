@@ -6,7 +6,7 @@
 
         <variable
             name="clickListener"
-            type="in.thenvn.artista.editor.StylesAdapter.StyleClickListener" />
+            type="com.naveeen.artista.editor.StylesAdapter.StyleClickListener" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

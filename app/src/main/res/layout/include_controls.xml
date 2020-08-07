@@ -7,7 +7,7 @@
 
         <variable
             name="editorViewModel"
-            type="in.thenvn.artista.editor.EditorViewModel" />
+            type="com.naveeen.artista.editor.EditorViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

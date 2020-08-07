@@ -8,7 +8,7 @@
 
         <variable
             name="editorViewModel"
-            type="in.thenvn.artista.editor.EditorViewModel" />
+            type="com.naveeen.artista.editor.EditorViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -24,7 +24,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <in.thenvn.artista.custom.FullHeightImageView
+            <com.naveeen.artista.custom.FullHeightImageView
                 android:id="@+id/preview"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"

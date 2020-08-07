@@ -7,7 +7,7 @@
 
         <variable
             name="mediaViewModel"
-            type="in.thenvn.artista.media.MediaViewModel" />
+            type="com.naveeen.artista.media.MediaViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

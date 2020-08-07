@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/mediaSelectionFragment"
-        android:name="in.thenvn.artista.media.MediaSelectionFragment"
+        android:name="com.naveeen.artista.media.MediaSelectionFragment"
         android:label="MediaSelectionFragment">
         <action
             android:id="@+id/action_mediaSelectionFragment_to_editorFragment"
@@ -16,7 +16,7 @@
     </fragment>
     <fragment
         android:id="@+id/editorFragment"
-        android:name="in.thenvn.artista.editor.EditorFragment"
+        android:name="com.naveeen.artista.editor.EditorFragment"
         android:label="fragment_editor"
         tools:layout="@layout/fragment_editor">
         <argument

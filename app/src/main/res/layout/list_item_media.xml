@@ -8,11 +8,11 @@
 
         <variable
             name="mediaItem"
-            type="in.thenvn.artista.media.MediaItem" />
+            type="com.naveeen.artista.media.MediaItem" />
 
         <variable
             name="clickListener"
-            type="in.thenvn.artista.media.MediaItemsAdapter.MediaItemClickListener" />
+            type="com.naveeen.artista.media.MediaItemsAdapter.MediaItemClickListener" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
