@@ -13,7 +13,7 @@
     <string name="error_unknown">Something went wrong!</string>
     <string name="message_no_media">No Images Found</string>
     <string name="error_dimensions_large_difference">Image\'s smaller dimension is much smaller than it\'s larger dimension!</string>
-    <string name="label_custom_style">Gallery</string>
+    <string name="label_custom_style">Choose From Gallery</string>
     <string name="description_choose_custom_style">choose custom style</string>
     <string name="description_style_preview">style preview</string>
     <string name="menu_title_about">About</string>
